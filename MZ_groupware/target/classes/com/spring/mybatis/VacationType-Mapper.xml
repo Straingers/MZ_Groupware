@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="VacationType-Mapper">
+	
+	<select id="selectVacationTypeList" parameterType="vacationType" resultType="vacationType">
+		SELECT
+		    vac_code
+		  , vac_name
+		  , vac_days
+		  , is_use
+		  , is_del
+		FROM
+		    vacation_type
+	</select>
+	
+	<update id="updateVacationType" parameterType="vacationType">
+		UPDATE vacation_type
+		SET
+		    vac_days = 15 + #{vacDays}
+		WHERE
+		    vac_code = #{vacCode}
+	</update>
+	
+</mapper>

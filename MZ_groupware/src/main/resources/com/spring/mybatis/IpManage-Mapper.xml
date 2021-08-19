@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="IpManage-Mapper">
+
+	<select id="selectIpList" resultType="ip">
+		SELECT
+		    IP_SEQ
+		   ,IP_ADDRESS
+		   ,IP_USE
+		   ,IP_DEL
+		   ,IP_DATE
+		FROM IP_MANAGE
+		WHERE IP_DEL = 'N'
+		ORDER BY IP_SEQ ASC
+	</select>
+	
+	<select id="selectAvailableIp" resultType="ip">
+		SELECT
+		   IP_ADDRESS
+		FROM IP_MANAGE
+		WHERE IP_DEL = 'N' AND IP_USE = 'Y'
+	</select>
+	
+	<insert id="insertIp">
+		<selectKey resultType="int" keyProperty="ipSeq" order="BEFORE">
+        	SELECT SEQ_IP.NEXTVAL FROM DUAL
+    	</selectKey>   
+		INSERT INTO ip_manage (
+		    IP_SEQ
+		    ,IP_ADDRESS
+		) VALUES (
+		   #{ipSeq}
+		   ,#{ipAddress}
+		)
+	</insert>
+	
+	<update id="updateUse">
+		UPDATE IP_MANAGE
+		SET
+		    IP_USE = #{ipUse}
+		WHERE
+	        IP_SEQ = #{ipSeq}
+	</update>
+	
+	<update id="deleteIp">
+		UPDATE IP_MANAGE
+		SET
+		    IP_DEL = 'Y'
+		WHERE
+	        IP_SEQ = #{ipSeq}
+	</update>
+	
+</mapper>

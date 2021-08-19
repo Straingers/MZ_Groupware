@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OfficeBoard-Mapper">
+
+	<sql id="searchList">
+		<if test="searchType == 't'.toString()">
+			AND A.OFFICE_TITLE LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			AND A.OFFICE_CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			AND C.EMP_NAME LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			AND (
+			A.OFFICE_TITLE LIKE '%'||#{keyword}||'%'
+			OR
+			A.OFFICE_CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+	</sql>
+	<sql id="searchCount">
+		<if test="searchType == 't'.toString()">
+			AND OFFICE_TITLE LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			AND OFFICE_CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			AND EMP_NAME LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			AND (
+			OFFICE_TITLE LIKE '%'||#{keyword}||'%'
+			OR
+			OFFICE_CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+	</sql>
+	
+	<!-- 리스트 가져오기 -->
+	<select id="selectOfficeList" resultType="office">
+		select A.OFFICE_NO 			officeNo
+			 , A.ADMIN_ID 			adminId
+			 , A.OFFICE_TITLE 		officeTitle
+			 , A.OFFICE_CONTENT 	officeContent
+			 , to_char(A.OFFICE_REGDATE, 'YYYY-MM-DD') officeRegdate
+			 , A.OFFICE_VIEWCNT 	officeViewcnt
+			 , to_char(A.OFFICE_UPDATEDATE, 'YY.MM.DD HH24:MI') officeUpdatedate
+			 , A.IS_DEL 			isDel
+			 , C.EMP_NAME 			adminName
+			 , C.EMP_NO				adminEmpNo
+		from OFFICE_BOARD A 
+            inner join ADMIN B on A.ADMIN_ID = B.ADMIN_ID 
+            inner join employee C on B.EMP_NO = C.EMP_NO
+		where 1=1
+		<include refid="searchList" />
+		and A.IS_DEL = 'N'
+        order by A.OFFICE_NO desc
+	</select>
+	
+	<!-- 해당 게시글 가져오기(상세) -->
+	<select id="selectOfficeByOfficeNo" resultType="office">
+		select A.OFFICE_NO officeNo
+			 , A.ADMIN_ID adminId
+			 , A.OFFICE_TITLE officeTitle
+			 , A.OFFICE_CONTENT officeContent
+			 , to_char(A.OFFICE_REGDATE, 'YY.MM.DD HH24:MI') officeRegdate
+			 , A.OFFICE_VIEWCNT officeViewcnt
+			 , to_char(A.OFFICE_UPDATEDATE, 'YY.MM.DD HH24:MI') officeUpdatedate
+			 , A.IS_DEL isDel
+			 , C.EMP_NAME adminName
+		from OFFICE_BOARD A 
+            inner join ADMIN B on A.ADMIN_ID = B.ADMIN_ID 
+            inner join employee C on B.EMP_NO = C.EMP_NO
+		where 1=1
+		and A.OFFICE_NO = #{officeNo}
+		and A.IS_DEL = 'N'
+	</select>
+	
+	<!-- admin에 있나 확인 -->
+	<select id="checkExistByEmpNo" resultType="int">
+		select count(*)
+		from ADMIN
+		where 1=1
+		and EMP_NO = #{empNo}
+	</select>
+	
+	<!-- admin에 있으면 vo 가져와 -->
+	<select id="getAdminByEmpNo" resultType="admin">
+		select *
+		from ADMIN
+		where 1=1
+		and EMP_NO = #{empNo}
+	</select>
+	
+	<!-- 리스트 cnt가져오기 -->
+	<select id="selectOfficeListCount" resultType="int">
+		select count(*)
+		from OFFICE_BOARD
+		where 1=1
+		<include refid="searchCount" />
+		and IS_DEL = 'N'
+	</select>
+	
+	
+	<!-- 게시글 등록 -->
+	<update id="insertOfficeBoard">
+		insert into 
+        OFFICE_BOARD(OFFICE_NO, ADMIN_ID, OFFICE_TITLE, OFFICE_CONTENT)
+        values(#{officeNo}, #{adminId}, #{officeTitle}, #{officeContent})
+        
+        <selectKey keyProperty="officeNo" resultType="int" order="BEFORE">
+        	select seq_office_board.nextval
+			from dual
+        </selectKey>
+	</update>
+	
+	<!-- 게시글 수정 -->
+	<update id="updateOfficeBoard">
+		update OFFICE_BOARD
+		set OFFICE_TITLE = #{officeTitle}
+		  , OFFICE_CONTENT = #{officeContent}
+		  , OFFICE_UPDATEDATE = sysdate
+		where OFFICE_NO = #{officeNo}
+	</update>
+	
+	<!-- 게시글 삭제 -->
+	<update id="deleteOfficeBoard">
+		update OFFICE_BOARD
+		set IS_DEL = 'Y'
+		where OFFICE_NO = #{officeNo}
+	</update>
+</mapper>

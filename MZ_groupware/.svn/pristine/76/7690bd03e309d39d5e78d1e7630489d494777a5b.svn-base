@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Community-Reply-Mapper">
+	
+	<select id="selectMyReplyListByCommNo" resultType="communityreply">
+		SELECT
+		    A.REPLY_NO
+		  , A.COMM_NO
+		  , A.REPLYER
+		  , A.REPLYTEXT
+		  , A.REGDATE
+		  , A.IS_DEL
+		  , A.COMMUNITY_CODE
+		FROM
+    		community_reply A INNER JOIN community_board B ON(A.COMM_NO = B.COMM_NO)
+    	WHERE
+    		replyer = #{replyer}
+    	AND
+    		B.comm_no = #{commNo}
+    	AND B.IS_DEL = 'N'
+    	ORDER BY 1 DESC
+	</select>
+	
+	<select id="selectMyReplyListByCommNoCount" resultType="int">
+		SELECT
+		   count(distinct a.comm_no)
+		FROM
+    		community_reply a inner join community_board b on(a.comm_no = b.comm_no)
+    	WHERE
+    		replyer = #{writer}
+    	AND B.IS_DEL = 'N'
+    	<if test="searchType == 'brtc'.toString()">
+			AND b.comm_title like '%'||#{keyword}||'%'
+			OR  a.replytext like '%'||#{keyword}||'%'
+		</if>
+    	<if test="searchType == 'bt'.toString()">
+			AND b.comm_title like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'rc'.toString()">
+			AND a.replytext like '%'||#{keyword}||'%'
+		</if>
+	</select>
+	
+	<select id="selectMyReplyCommNo" resultType="str">
+		SELECT
+		    distinct a.comm_no
+		FROM
+		    community_reply a inner join community_board b on(a.comm_no = b.comm_no)
+		WHERE
+		    replyer = #{writer}
+		AND B.IS_DEL = 'N'
+	    <if test="searchType == 'brtc'.toString()">
+			AND b.comm_title like '%'||#{keyword}||'%'
+			OR  a.replytext like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'bt'.toString()">
+			AND b.comm_title like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'rc'.toString()">
+			AND a.replytext like '%'||#{keyword}||'%'
+		</if>
+		ORDER BY 1 desc
+	</select>
+	
+	<select id="selectReplySeqNextValue" resultType="int">
+		select seq_community_reply.nextval
+		from dual
+	</select>
+	
+	<select id="selectReplyList" resultType="communityreply">
+		select a.reply_no
+		  , a.comm_no
+		  , b.emp_name replyer
+		  , b.emp_photo replyerPhoto
+		  , a.replytext
+		  , a.regdate
+		  , a.is_del
+		  , a.community_code
+		from community_reply A INNER JOIN employee B ON b.emp_no = a.replyer
+		where comm_no=#{commNo}
+		and community_code=#{communityCode}
+		and is_del='N'
+		order by reply_no desc
+	</select>
+	
+	<select id="countReply" resultType="int">
+		select count(comm_no)
+		from community_reply
+		where comm_no=#{commNo}
+		and community_code=#{communityCode}
+		and is_del='N'
+	</select>
+	
+	<!-- 사내 익명 게시판 댓글  -->
+	<update id="insertReply">
+		INSERT INTO community_reply (
+		  reply_no
+		  ,comm_no
+		  ,replyer
+		  ,replytext
+		  ,regdate
+		  ,is_del
+		  ,community_code
+		) VALUES (
+		  #{replyNo}
+		  ,#{commNo}
+		  ,#{replyer}
+		  ,#{replytext}
+		  ,sysdate
+		  ,#{isDel}
+		  ,#{communityCode}
+		)
+	</update>
+	
+	<update id="updateReply">
+		update community_reply
+		set
+		replytext=#{replytext}
+		where reply_no=#{replyNo}
+	</update>
+	
+	<update id="deleteReply">
+		update community_reply
+		set is_del='Y'
+		where reply_no=#{replyNo}
+	</update>
+
+</mapper>

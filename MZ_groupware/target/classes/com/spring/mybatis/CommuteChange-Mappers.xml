@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CommuteChange-Mappers">
+
+	<select id="selectCommuteChangeListByDept" resultType="commuteChange">
+		SELECT A.CHANGE_NO
+			 , A.COMMUTE_NO
+			 , A.CHANGE_EMP_NO
+			 , A.CHANGE_EMP_NAME
+			 , A.FORMER_IN_TYPE
+			 , A.CHANGE_IN_TYPE
+			 , A.CHANGE_TIME
+			 , DATE_FORMAT(B.IN_TIME, '%Y-%m-%d') TIME
+		FROM   COMMUTE_CHANGE A, COMMUTE B
+		WHERE  A.COMMUTE_NO = B.COMMUTE_NO
+		AND    A.DEPT_NAME = #{deptName}
+		AND    DATE_FORMAT(A.CHANGE_TIME, '%Y%m') = #{changeTime}
+		ORDER  BY A.CHANGE_NO DESC
+	</select>
+
+	<update id="insertCommuteChange" useGeneratedKeys="true" keyProperty="CHANGE_NO">
+		<selectKey keyProperty="changeNo" resultType="string" order="BEFORE">
+         SELECT MAX(change_no) + 1 AS change_no FROM commute_change
+      	</selectKey>
+		INSERT INTO COMMUTE_CHANGE (
+			CHANGE_NO
+			, COMMUTE_NO
+			, CHANGE_EMP_NO
+			, CHANGE_EMP_NAME
+			, FORMER_IN_TYPE
+			, CHANGE_IN_TYPE
+			, DEPT_NAME
+		) VALUES (
+			#{changeNo}
+			, #{commuteNo}
+			, #{changeEmpNo}
+			, #{changeEmpName}
+			, #{formerInType}
+			, #{changeInType}
+			, #{deptName}
+		)
+	</update>
+	
+</mapper>

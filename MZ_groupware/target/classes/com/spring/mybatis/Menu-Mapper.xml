@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Menu-Mapper">
+	
+	<select id="selectMainMenu" resultType="menu">
+		SELECT *
+		FROM   MENU
+		WHERE  MENU_CODE LIKE '%' || '0000' || '%'
+		AND    MENU_ISNAV = 1
+		ORDER  BY MENU_CODE ASC
+	</select>	
+	
+	<select id="selectSubMenu" resultType="menu">
+		SELECT *
+		FROM   MENU
+		WHERE  MENU_UPCODE = #{menuCode} 
+		AND    MENU_ISNAV = 1
+		ORDER  BY MENU_CODE ASC
+	</select>
+	
+	<select id="selectMenuByMcode" resultType="menu">
+		SELECT *
+		FROM   MENU
+		WHERE  MENU_CODE = #{menuCode}
+	</select>	
+	
+	<select id="selectMenuByMname" resultType="menu">
+		SELECT *
+		FROM   MENU
+		WHERE  MNAME = #{mName}
+	</select>	
+	
+	<update id="insertMenu">
+		INSERT INTO menu (
+		    menu_code
+		  , menu_name
+		  , menu_url
+		  , menu_upcode
+		  , menu_isnav
+		  , menu_icon
+		) VALUES (
+		    #{menuCode}
+		  ,	#{menuName}
+		  , #{menuUrl}
+		  , #{menUpcode}
+		  ,	#{menuIsnav}
+		  , 'flaticon2-sheet'
+		)
+	</update>
+	
+	<update id="updateMenu">
+		UPDATE menu
+	    SET
+		    menu_name = #{menuName}
+		  , menu_isnav = #{menuIsnav}
+		WHERE
+		    menu_code = #{menuCode}
+	</update>
+	
+	<update id="deleteMenu">
+		DELETE FROM menu
+		WHERE  menu_code = #{menuCode}
+	</update>
+</mapper>

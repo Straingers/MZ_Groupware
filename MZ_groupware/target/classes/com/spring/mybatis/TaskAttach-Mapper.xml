@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TaskAttach-Mapper">
+	
+	<select id="selectAttachByAno" resultType="taskAttach">
+		SELECT
+		    ATTACH_NO
+		  , TASK_NO
+		  , ATTACH_UPLOADPATH
+		  , ATTACH_FILENAME
+		  , ATTACH_FILETYPE
+		  , ATTACH_ATTACHER
+		  , ATTACH_REGDATE
+		FROM
+		    TASK_ATTACH
+		WHERE ATTACH_NO = #{attachNo}
+	</select>
+	
+	<select id="selectAttachByTno" resultType="taskAttach">
+		SELECT
+		    ATTACH_NO
+		  , TASK_NO
+		  , ATTACH_UPLOADPATH
+		  , ATTACH_FILENAME
+		  , ATTACH_FILETYPE
+		  , ATTACH_ATTACHER
+		  , ATTACH_REGDATE
+		FROM
+		    TASK_ATTACH
+		WHERE TASK_NO = #{taskNo}
+		ORDER BY ATTACH_NO ASC
+	</select>
+	
+	<insert id="insertAttach">
+		INSERT INTO task_attach (
+		    attach_no
+		  , task_no
+		  , attach_uploadpath
+		  , attach_filename
+		  , attach_filetype
+		  , attach_attacher
+		) VALUES (
+		    #{attachNo}
+		  , #{taskNo}
+		  , #{attachUploadpath}
+		  , #{attachFilename}
+		  , #{attachFiletype}
+		  , #{attachAttacher}
+		)
+		<selectKey keyProperty="attachNo" resultType="int" order="BEFORE">
+			SELECT SEQ_TASK_ATTACH.nextval FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<delete id="deleteAttach">
+		DELETE FROM TASK_ATTACH
+		WHERE  ATTACH_NO = #{attachNo}
+	</delete>
+	
+	<delete id="deleteAllAttach">
+		DELETE FROM TASK_ATTACH
+		WHERE  TASK_NO = #{taskNo}
+	</delete>
+	
+	<!-- 업무보고 첨부파일 로그 -->
+	<select id="selectAllTaskList" resultType="taskAttach">
+		SELECT
+		    A.ATTACH_NO
+		  , B.TASK_NO
+		  , B.TASK_TITLE
+		  , SUBSTR(A.ATTACH_FILENAME, 35) FILE_NAME
+		  , A.ATTACH_ATTACHER
+		  , C.EMP_NAME
+		  , C.DEPT_NAME
+		  , C.PS_NAME
+		  , A.ATTACH_REGDATE
+		FROM
+		    TASK_ATTACH A
+		    INNER JOIN TASK_REPORT B ON A.TASK_NO = B.TASK_NO
+		    INNER JOIN VIEW_EMP C ON A.ATTACH_ATTACHER = C.EMP_NO
+		ORDER BY
+		    A.ATTACH_NO DESC
+	</select>
+	
+	<select id="selectAllTaskListCount" resultType="int">
+		SELECT
+			COUNT(A.ATTACH_NO)
+		FROM
+		    TASK_ATTACH A
+		    INNER JOIN TASK_REPORT B ON A.TASK_NO = B.TASK_NO
+		    INNER JOIN VIEW_EMP C ON A.ATTACH_ATTACHER = C.EMP_NO
+	</select>
+	
+</mapper>

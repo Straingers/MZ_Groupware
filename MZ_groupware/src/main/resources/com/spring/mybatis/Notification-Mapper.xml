@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Notification-Mapper">
+	<select id="selectNotificationList" resultType="notification">
+		SELECT
+		    notification_no
+		  , emp_no
+		  , notification_date
+		  , notification_type
+		  , notification_content
+		  , notification_state
+		  , notification_url
+		  , menu_code
+		FROM
+		    notification
+	</select>
+	
+	<select id="selectMyNotificationList" resultType="notification">
+		SELECT
+		    notification_no
+		  , emp_no
+		  , notification_date
+		  , notification_type
+		  , notification_content
+		  , notification_state
+		  , notification_url
+		FROM
+		    notification
+		WHERE  
+			emp_no = #{empNo}
+		ORDER  BY 
+			notification_no DESC    
+	</select>
+
+	<select id="selectMyNotificationCount" resultType="int">
+		SELECT COUNT(*)
+		FROM   notification
+		WHERE  emp_no = #{empNo}
+	</select>
+
+	<select id="selectLastNotificationNo" resultType="int">
+		SELECT
+		    notification_no
+		FROM
+		    notification
+		WHERE rownum = 1
+		ORDER BY 1 desc
+	</select>
+
+	<update id="insertNotification" parameterType="notification">
+		INSERT INTO notification (
+		    notification_no
+		  , emp_no
+		  , notification_date
+		  , notification_type
+		  , notification_content
+		  , notification_state
+		  , notification_url
+		) VALUES (
+		   	SEQ_NOTIFICATION.NEXTVAL
+		  , #{empNo}
+		  , SYSDATE
+		  , #{notificationType}
+		  , #{notificationContent}
+		  , 'N'
+		  , #{notificationUrl}
+		)
+	</update>
+	
+	<update id="deleteNotification" parameterType="notification">
+		DELETE FROM notification
+		WHERE  notification_no = #{notificationNo}
+	</update>
+	
+</mapper>

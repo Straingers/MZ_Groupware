@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CommunityBoard-Mapper">
+	<sql id="search">
+		<if test="searchType == 't'.toString()">
+			and comm_title like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			and emp_name like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			and comm_content like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			and (
+			comm_title like '%'||#{keyword}||'%'
+			or
+			emp_name like '%'||#{keyword}||'%'
+			or
+			comm_content like '%'||#{keyword}||'%'
+			)
+		</if>
+		<if test="searchType == 'tcw'.toString()">
+			and (
+			comm_title like '%'||#{keyword}||'%'
+			or
+			EMP_NAME like '%'||#{keyword}||'%'
+			or
+			comm_content like '%'||#{keyword}||'%'
+			)
+		</if>
+	</sql>
+	
+	<!-- 마이페이지 내가 쓴 글보기 -->
+	<select id="selectAllCommunityBoardListByLoginUser" resultType="communityboard">
+		SELECT  A.COMMUNITY_CODE
+			  , A.COMM_NO
+			  , A.EMP_NO
+			  , A.COMM_TITLE
+			  , A.COMM_CONTENT
+			  , A.COMM_REGDATE
+			  , A.COMM_VIEWCNT
+			  , A.COMM_UPDATEDATE
+			  , A.IS_DEL
+			  , B.EMP_NAME
+		FROM   COMMUNITY_BOARD A INNER JOIN EMPLOYEE B ON A.EMP_NO = B.EMP_NO
+		WHERE  A.EMP_NO = #{writer}
+		AND    A.COMM_NO IS NOT NULL
+		AND    A.IS_DEL = 'N'
+		<if test="searchType == 't'.toString()">
+			and A.comm_title like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			and B.EMP_NAME like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			and A.comm_content like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			and (
+			A.comm_title like '%'||#{keyword}||'%'
+			or
+			B.EMP_NAME like '%'||#{keyword}||'%'
+			)
+		</if>
+		<if test="searchType == 'cw'.toString()">
+			and (
+			B.EMP_NAME like '%'||#{keyword}||'%'
+			or
+			A,COMM_CONTENT like '%'||#{keyword}||'%'
+			)
+		</if>
+		<if test="searchType == 'tcw'.toString()">
+			and (
+			comm_title like '%'||#{keyword}||'%'
+			or
+			B.EMP_NAME like '%'||#{keyword}||'%'
+			or
+			comm_content like '%'||#{keyword}||'%'
+			)
+		</if>
+		ORDER  BY COMM_REGDATE DESC
+	</select>
+	
+	<select id="selectAllCommunityBoardListByLoginUserCount" resultType="int">
+		SELECT COUNT(*)
+		FROM   COMMUNITY_BOARD A INNER JOIN EMPLOYEE B ON A.EMP_NO = B.EMP_NO
+		WHERE  A.EMP_NO = #{writer}
+		AND    A.COMM_NO IS NOT NULL
+		AND    A.IS_DEL = 'N'
+		<if test="searchType == 't'.toString()">
+			and A.comm_title like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			and B.EMP_NAME like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			and A.comm_content like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			and (
+			A.comm_title like '%'||#{keyword}||'%'
+			or
+			B.EMP_NAME like '%'||#{keyword}||'%'
+			)
+		</if>
+		<if test="searchType == 'cw'.toString()">
+			and (
+			B.EMP_NAME like '%'||#{keyword}||'%'
+			or
+			A,COMM_CONTENT like '%'||#{keyword}||'%'
+			)
+		</if>
+		<if test="searchType == 'tcw'.toString()">
+			and (
+			comm_title like '%'||#{keyword}||'%'
+			or
+			B.EMP_NAME like '%'||#{keyword}||'%'
+			or
+			comm_content like '%'||#{keyword}||'%'
+			)
+		</if>
+	</select>
+	
+	<!-- 사내 익명 게시판 조회 -->
+	<select id="selectSearchCommunityBoardAnonyList" resultType="communityboard">
+		select 
+			a.community_code
+		   ,a.comm_no
+		   ,a.emp_no
+		   ,a.comm_title
+		   ,a.comm_content
+		   ,a.comm_regdate
+		   ,a.comm_viewcnt
+		   ,a.comm_updatedate
+		   ,a.is_del
+		   ,b.emp_name
+		from community_board A INNER JOIN EMPLOYEE B ON A.EMP_NO = B.EMP_NO
+		where a.community_code = 'M050300' and a.comm_no is not null and a.is_del='N'
+		<include refid="search" />
+		order by a.comm_regdate desc
+	</select>
+	
+	<!-- 사내 익명 게시판 개수 조회 -->
+	<select id="selectSearchCommunityBoardAnonyListCount" resultType="int">
+		select
+		count(*)
+		from community_board A INNER JOIN EMPLOYEE B ON A.EMP_NO = B.EMP_NO
+		where A.community_code = 'M050300' and A.comm_no is not null and A.is_del='N'
+		<include refid="search" />
+		order by A.comm_regdate desc
+	</select>
+	
+	
+	
+	<!-- /////////////////////////////////////////////////////////////////////////////////////// -->
+	
+	<!-- 동호회 게시판 조회 -->
+	<select id="selectSearchCommunityBoardClubList" resultType="communityboard">
+		select 
+			a.community_code
+	   ,a.comm_no
+	   ,a.emp_no
+	   ,a.comm_title
+	   ,a.comm_content
+	   ,a.comm_regdate
+	   ,a.comm_viewcnt
+	   ,a.comm_updatedate
+	   ,a.is_del
+	   ,b.emp_name
+		from community_board A INNER JOIN EMPLOYEE B ON A.EMP_NO = B.EMP_NO
+		where a.community_code = 'M050400' and a.comm_no is not null and a.is_del='N'
+		<include refid="search" />
+		order by a.comm_regdate desc
+	</select>
+	
+	<!-- 동호회 게시판 개수 조회 -->
+	<select id="selectSearchCommunityBoardClubListCount" resultType="int">
+		select
+		count(*)
+		from community_board A INNER JOIN EMPLOYEE B ON A.EMP_NO = B.EMP_NO
+		where A.community_code = 'M050400' and A.comm_no is not null and A.is_del='N'
+		<include refid="search" />
+		order by A.comm_regdate desc
+	</select>
+	
+	<!-- /////////////////////////////////////////////////////////////////////////////////////// -->
+	
+	<!-- 경조사 게시판 조회 -->
+	<select id="selectSearchCommunityBoardCncList" resultType="communityboard">
+		select 
+	    a.community_code
+	   ,a.comm_no
+	   ,a.emp_no
+	   ,a.comm_title
+	   ,a.comm_content
+	   ,a.comm_regdate
+	   ,a.comm_viewcnt
+	   ,a.comm_updatedate
+	   ,a.is_del
+	   ,b.emp_name
+		from community_board A INNER JOIN EMPLOYEE B ON A.EMP_NO = B.EMP_NO
+		where a.community_code = 'M050500' and a.comm_no is not null and a.is_del='N'
+		<include refid="search" />
+		order by a.comm_regdate desc
+	</select>
+	
+	<!-- 경조사 게시판 개수 조회 -->
+	<select id="selectSearchCommunityBoardCncListCount" resultType="int">
+		select
+		count(*)
+		from community_board A INNER JOIN EMPLOYEE B ON A.EMP_NO = B.EMP_NO
+		where A.community_code = 'M050500' and A.comm_no is not null and A.is_del='N'
+		<include refid="search" />
+		order by A.comm_regdate desc
+	</select>
+	
+	<!-- /////////////////////////////////////////////////////////////////////////////////////// -->
+	
+	<!-- Qna 게시판 조회 -->
+	<select id="selectSearchCommunityBoardQnaList" resultType="communityboard">
+		select 
+			a.community_code
+	   ,a.comm_no
+	   ,a.emp_no
+	   ,a.comm_title
+	   ,a.comm_content
+	   ,a.comm_regdate
+	   ,a.comm_viewcnt
+	   ,a.comm_updatedate
+	   ,a.is_del
+	   ,b.emp_name 
+		from community_board A INNER JOIN EMPLOYEE B ON A.EMP_NO = B.EMP_NO
+		where community_code = 'M050200' and comm_no is not null and is_del='N'
+		<include refid="search" />
+		order by comm_regdate desc
+	</select>
+	
+	<!-- Qna 게시판 개수 조회 -->
+	<select id="selectSearchCommunityBoardQnaListCount" resultType="int">
+		select
+		count(*)
+		from community_board A INNER JOIN EMPLOYEE B ON A.EMP_NO = B.EMP_NO
+		where A.community_code = 'M050200' and A.comm_no is not null and A.is_del='N'
+		<include refid="search" />
+		order by A.comm_regdate desc
+	</select>
+	
+	<!-- 공통@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ -->
+	<!-- 게시글 글번호 기준 조회 -->
+	<select id="selectCommunityBoardByCommNo" parameterType="int" resultType="communityboard">
+		select
+		    community_code
+		  , (select menu_name
+		     from   menu
+		     where  menu_code = a.community_code) communityName
+		  , comm_no
+		  , (select emp_name
+		     from employee
+		     where emp_no = a.emp_no) commWriter
+		  , comm_title
+		  , comm_content
+		  , comm_regdate
+		  , comm_viewcnt
+		  , comm_updatedate
+		  , is_del
+		from community_board a
+		where comm_no=#{commNo}
+	</select>
+	
+	<!-- 다음 시퀀스 가져오기 -->
+	<select id="selectCommunityBoardSequenceNextValue" resultType="int">
+		select seq_community_board.nextVal
+		from dual
+	</select>
+	
+	<!-- 조회수 증가 -->
+	<update id="increaseViewCount" parameterType="int"><!-- detail 할 때 -->
+		update community_board
+		set comm_viewcnt=comm_viewcnt+1
+		where comm_no=#{commNo}
+	</update>
+	
+	<!-- 게시글 등록 -->
+	<update id="insertCommunityBoard" parameterType="communityboard">
+		insert into community_board(
+			community_code,
+			comm_no,
+			emp_no,
+			comm_title,
+			comm_content,
+			comm_regdate
+		) values (
+			#{communityCode}
+			,#{commNo}
+			,#{empNo}
+			,#{commTitle}
+			,#{commContent}
+			,sysdate
+		)
+	</update>
+	
+	<!-- 게시판 수정 -->
+	<update id="updateCommunityBoard" parameterType="communityboard">
+      update community_board
+      set comm_title = #{commTitle}
+        , comm_content = #{commContent}
+      where comm_no=#{commNo}
+   </update>
+   
+   <!-- 게시판 삭제 -->
+   <update id="deleteCommunityBoard" parameterType="int">
+		update community_board
+		set is_del = 'Y'
+		where comm_no=#{commNo}
+	</update>
+	
+</mapper>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="PdsBoard-Mapper">
+
+	<sql id="searchList">
+		<if test="searchType == 't'.toString()">
+			AND A.TITLE LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			AND A.CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			AND B.EMP_NAME LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			AND (
+			A.TITLE LIKE '%'||#{keyword}||'%'
+			OR
+			A.CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+	</sql>
+	<sql id="searchCount">
+		<if test="searchType == 't'.toString()">
+			AND TITLE LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			AND CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			AND EMP_NAME LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			AND (
+			TITLE LIKE '%'||#{keyword}||'%'
+			OR
+			CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+	</sql>
+	
+	<!-- 리스트 가져오기 -->
+	<select id="selectPdsList" resultType="pds">
+		select A.PDS_NO
+			 , A.EMP_NO
+			 , A.TITLE
+			 , A.CONTENT
+			 , to_char(A.REGDATE, 'YY-MM-DD') regdate
+			 , A.VIEWCNT
+			 , to_char(A.UPDATEDATE, 'YY.MM.DD HH24:MI') updatedate
+			 , A.IS_DEL
+			 , B.EMP_NAME
+		from PDS_BOARD A 
+            inner join employee B on A.EMP_NO = B.EMP_NO
+		where 1=1
+		<include refid="searchList" />
+		and A.IS_DEL = 'N'
+        order by A.PDS_NO desc
+	</select>
+	
+	<!-- 해당 게시글 가져오기(상세) -->
+	<select id="selectPdsByPdsNo" resultType="pds">
+		select A.PDS_NO
+			 , A.EMP_NO
+			 , A.TITLE
+			 , A.CONTENT
+			 , to_char(A.REGDATE, 'YYYY-MM-DD') regdate
+			 , A.VIEWCNT
+			 , to_char(A.UPDATEDATE, 'YY.MM.DD HH24:MI') updatedate
+			 , A.IS_DEL
+			 , B.EMP_NAME
+		from PDS_BOARD A 
+            inner join employee B on A.EMP_NO = B.EMP_NO
+		where 1=1
+		and A.PDS_NO = #{pdsNo}
+		and A.IS_DEL = 'N'
+	</select>
+	
+	<!-- 리스트 cnt가져오기 -->
+	<select id="selectPdsListCount" resultType="int">
+		select count(*)
+		from PDS_BOARD
+		where 1=1
+		<include refid="searchCount" />
+		and IS_DEL = 'N'
+	</select>
+	
+	
+	<!-- 게시글 등록 -->
+	<update id="insertPdsBoard">
+		insert into 
+        PDS_BOARD(PDS_NO, EMP_NO, TITLE, CONTENT)
+        values(#{pdsNo}, #{empNo}, #{title}, #{content})
+        
+        <selectKey keyProperty="pdsNo" resultType="int" order="BEFORE">
+        	select seq_pds_board.nextval
+			from dual
+        </selectKey>
+	</update>
+	
+	<!-- 게시글 수정 -->
+	<update id="updatePdsBoard">
+		update PDS_BOARD
+		set TITLE = #{title}
+		  , CONTENT = #{content}
+		  , UPDATEDATE = sysdate
+		where PDS_NO = #{pdsNo}
+	</update>
+	
+	<!-- 게시글 삭제 -->
+	<update id="deletePdsBoard">
+		update PDS_BOARD
+		set IS_DEL = 'Y'
+		where PDS_NO = #{pdsNo}
+	</update>
+</mapper>

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Attach-Mapper">
+<!-- 전자결재 -->
+	<select id="selectAttachByAppNo" resultType="attach">
+		select *
+		from attach
+		where content_no=#{contentNo}
+	</select>
+
+<!-- 공통 -->
+	<select id="selectAttachByAttachNo" resultType="attach">
+		select * 
+		from attach
+		where attach_no = #{attachNo}
+	</select>
+	
+	<update id="insertAttach">
+		insert into attach (
+		attach_no
+		, menu_code
+		, content_no
+		, attach_uploadpath
+		, attach_filename
+		, attach_fileType
+		, attach_attacher
+		, attach_regdate
+		)
+		values (
+		seq_attach.nextval
+		, #{menuCode}
+		, #{contentNo}
+		, #{attachUploadpath}
+		, #{attachFilename}
+		, #{attachFiletype}
+		, #{attachAttacher}
+		, sysdate
+		)
+	</update>
+	
+	<!-- AttachNO 삭제 -->
+	<update id="deleteAttach">
+		delete from attach where attach_no = #{attachNo}
+	</update>
+	
+	
+	<!-- 전체만들기 -->
+	
+	<!-- 커뮤니티 -->
+	<select id="selectAttachCommunityByContentNo" resultType="attach">
+		select * 
+		from attach
+		where content_no = #{commNo}
+		and menu_code = #{communityCode}
+	</select>
+	<!-- 	ContentNO에 있는 파일 삭제 --> 
+	<!-- 	<update id="deleteAllAnonyAttach"> -->
+	<!-- 		delete -->
+	<!-- 		from attach -->
+	<!-- 		where content_no = #{contentNo} -->
+	<!-- 		and menu_code = 'M050300' -->
+	<!-- 	</update> -->
+	<!-- 커뮤니티 -->
+	
+	<update id="deleteAllApprovalAttach">
+		delete
+		from attach
+		where content_no = #{contentNo}
+	</update>
+	
+	<!-- 글번호로 첨부파일 찾기 -->
+	<select id="selectAttachByContentNo" resultType="attach">
+		SELECT * 
+		FROM ATTACH
+		WHERE CONTENT_NO = #{contentNo}
+	</select>
+	
+	
+	
+	<!-- NoticeBoard -->
+	<select id="selectAttacheNoticeByNoticeno" resultType="attach">
+		select * 
+		from attach
+		where content_no = #{noticeNo}
+		and menu_code = 'M050100'
+	</select>
+	
+	<!-- officeBoard -->
+	<select id="selectAttachOfficeByOfficeNo" resultType="attach">
+		select * 
+		from attach
+		where content_no = #{officeNo}
+		and menu_code = 'M060100'
+	</select>
+	
+	<!-- otBoard -->
+	<select id="selectAttachOtByOtNo" resultType="attach">
+		select * 
+		from attach
+		where content_no = #{otNo}
+		and menu_code = 'M060200'
+	</select>
+
+	<!-- pdsBoard -->
+	<select id="selectAttachPdsByPdsNo" resultType="attach">
+		select * 
+		from attach
+		where content_no = #{pdsNo}
+		and menu_code = 'M060300'
+	</select>
+	
+	
+	<select id="selectAttachAdditionalBoard" parameterType="attach" resultType="attach">
+		SELECT
+		    attach_no
+		  , menu_code
+		  , content_no
+		  , attach_uploadpath
+		  , attach_filename
+		  , attach_filetype
+		  , attach_attacher
+		  , attach_regdate
+		FROM
+		    attach
+		WHERE 
+			content_no = #{contentNo}
+		AND
+			menu_code = #{menuCode}
+	</select>
+	
+	
+	
+	<!-- 게시판 첨부파일 로그 -->
+	<select id="selectAllList" resultType="attach">
+		SELECT
+		    A.ATTACH_NO
+		  , B.MENU_NAME
+		  , A.ATTACH_ATTACHER
+		  , D.COMM_NO
+		  , D.COMM_TITLE
+		  , SUBSTR(A.ATTACH_FILENAME, 35) FILE_NAME
+		  , C.EMP_NAME
+		  , C.PS_NAME
+		  , C.DEPT_NAME
+		  , A.ATTACH_REGDATE
+		  , D.IS_DEL
+		FROM
+		    ATTACH A
+		    INNER JOIN MENU B ON A.MENU_CODE = B.MENU_CODE
+		    INNER JOIN VIEW_EMP C ON A.ATTACH_ATTACHER = C.EMP_NO
+		    INNER JOIN COMMUNITY_BOARD D ON A.CONTENT_NO = D.COMM_NO
+		ORDER BY
+		    A.ATTACH_NO DESC
+	</select>
+	
+	<select id="selectAllListCount" resultType="int">
+		SELECT
+			COUNT(A.ATTACH_NO)
+		FROM
+		    ATTACH A
+		    INNER JOIN MENU B ON A.MENU_CODE = B.MENU_CODE
+		    INNER JOIN VIEW_EMP C ON A.ATTACH_ATTACHER = C.EMP_NO
+		    INNER JOIN COMMUNITY_BOARD D ON A.CONTENT_NO = D.COMM_NO
+		ORDER BY
+		    A.ATTACH_NO DESC
+	</select>
+	
+	<select id="deleteAttachList" resultType="attach">
+		SELECT A.ATTACH_NO
+			 , A.MENU_CODE
+			 , A.CONTENT_NO
+			 , A.ATTACH_UPLOADPATH
+			 , A.ATTACH_FILENAME
+			 , A.ATTACH_FILETYPE
+			 , A.ATTACH_ATTACHER
+			 , A.ATTACH_REGDATE
+		FROM ATTACH A, COMMUNITY_BOARD B
+		WHERE B.IS_DEL = 'Y' AND A.CONTENT_NO = B.COMM_NO
+	</select>
+	
+	<delete id="deleteCommAttach">
+		DELETE
+		FROM
+			ATTACH A
+		WHERE EXISTS
+			(
+				SELECT 1 FROM COMMUNITY_BOARD B
+				WHERE B.IS_DEL = 'Y' AND A.CONTENT_NO = B.COMM_NO
+			)
+	</delete>
+	
+</mapper>

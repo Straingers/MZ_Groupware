@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ <!-- 주석입니다!!!!!!!!!!!!!!!!!!!!!!! --> 
+<mapper namespace="Approval-Mapper">
+	<sql id="search">
+		<if test="searchType == 't'.toString()">
+			and app_title like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			and app_content like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			and (
+			app_content like '%'||#{keyword}||'%'
+			or
+			app_content like '%'||#{keyword}||'%'
+		</if>
+	</sql>
+	
+	<select id="selectSearchApprovalList" resultType="approval">
+SELECT
+		    A.app_no
+		   ,A.emp_no
+		   ,A.doc_id
+		   ,A.app_title
+		   ,A.app_content
+		   ,A.app_status
+		   ,A.app_up_date
+		   ,B.EMP_NAME
+		   ,B.DEPT_NAME
+		   ,B.PS_NAME
+		   ,C.DOC_NAME
+		FROM
+		    APPROVAL A
+		    LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		    LEFT JOIN APPROVAL_DOC C ON A.DOC_ID = C.DOC_ID
+		where A.app_no is not null
+		and A.emp_no=#{writer} and A.app_temp='N' AND A.APP_STATUS != '반려'
+		<include refid="search" />
+		order by A.app_no desc
+</select>
+	
+	<select id="selectSearchApprovalByCategory" resultType="approval">
+		select A.*
+		from approval A
+			 LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		where A.app_no is not null
+		and A.app_status=#{appStatus}
+	</select>
+
+	<select id="selectSearchApprovalListCount" resultType="int">
+		SELECT COUNT(*)
+		FROM APPROVAL A
+			 LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		WHERE A.EMP_NO=#{writer} AND A.APP_TEMP='N'
+		<include refid="search" />
+		ORDER BY A.APP_UP_DATE DESC
+	</select>	
+	
+	<select id="selectApprovalByAppNo" parameterType="int" resultType="approval">
+select A.*
+			,  B.EMP_NAME
+			,  B.DEPT_NAME
+			,  B.PS_NAME
+			,  C.DOC_NAME
+		FROM
+		    APPROVAL A
+		    LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		    LEFT JOIN APPROVAL_DOC C ON A.DOC_ID = C.DOC_ID
+		where A.app_no=#{appNo}
+</select>
+	
+	<select id="selectApprovalSequenceNextValue" resultType="int">
+		select seq_approval.nextVal
+		from dual
+	</select>
+
+	<update id="insertApproval" parameterType="approval">
+		INSERT INTO APPROVAL (
+		    APP_NO
+		   ,EMP_NO
+		   ,DOC_ID
+		   ,APP_TITLE
+		   ,APP_CONTENT
+		   ,APP_STATUS
+		   ,APP_TEMP
+		) VALUES (
+		    #{appNo}
+		   ,#{empNo}
+		   ,#{docId}
+		   ,#{appTitle}
+		   ,#{appContent}
+		   ,#{appStatus}
+		   ,'N'
+		)
+	</update>
+	
+	<update id="updateApproval" parameterType="approval">
+		update approval
+		set
+		app_title=#{appTitle},app_content=#{appContent}
+		where app_no=#{appNo}
+	</update>	
+	
+	<update id="deleteApproval" parameterType="int">
+		delete
+		from approval
+		where app_no=#{appNo}
+	</update>
+	
+	<select id="selectApprovalByFileName" resultType="approval">
+		select *
+		from approval
+		where app_content like '#'||#{fileName}||'#'
+	</select>
+	
+	
+	<!-- 진행중 -->
+	<select id="selectIngApprovalList" resultType="approval">
+		SELECT 
+			  A.APP_NO
+			, A.EMP_NO
+			, A.DOC_ID
+			, A.APP_TITLE
+			, A.APP_CONTENT
+			, A.APP_STATUS
+			, A.APP_UP_DATE
+     		, B.EMP_NO
+     		, B.APP_TYPE
+     		, B.APP_LEVEL
+     		, B.APP_SIGN
+     		, C.EMP_NAME 
+     		, C.DEPT_NAME
+     		, C.PS_NAME
+     		, D.DOC_NAME
+		FROM   APPROVAL A 
+			   LEFT JOIN APPROVAL_HISTORY B ON A.APP_NO = B.APP_NO
+       		   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+       		   LEFT JOIN APPROVAL_DOC D ON A.DOC_ID = D.DOC_ID
+		WHERE  
+			(B.APP_TYPE = '1차결재권자' OR B.APP_TYPE = '2차결재권자' OR B.APP_TYPE = '최종결재권자' OR B.APP_TYPE = '협조')
+       		AND B.EMP_NO = #{empNo} AND A.APP_STATUS != '결재완료' AND A.APP_STATUS != '반려'
+       	ORDER BY APP_NO DESC
+	</select>
+	
+	<select id="selectIngListCount" resultType="int">
+		select count(*)
+		FROM   APPROVAL A 
+			   LEFT JOIN APPROVAL_HISTORY B ON A.APP_NO = B.APP_NO
+       		   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+		WHERE  
+			(B.APP_TYPE = '1차결재권자' OR B.APP_TYPE = '2차결재권자' OR B.APP_TYPE = '최종결재권자' OR B.APP_TYPE = '협조')
+       		AND B.EMP_NO = #{empNo} AND A.APP_STATUS != '결재완료' AND A.APP_STATUS != '반려'
+		<include refid="search" />
+		order by A.app_up_date desc
+	</select>	
+
+	<select id="selectCompApprovalList" resultType="approval">
+		SELECT 
+			  A.APP_NO
+			, A.EMP_NO
+			, A.DOC_ID
+			, A.APP_TITLE
+			, A.APP_CONTENT
+			, A.APP_STATUS
+			, A.APP_UP_DATE
+     		, B.EMP_NO
+     		, B.APP_TYPE
+     		, C.EMP_NAME
+     		, C.DEPT_NAME
+     		, C.PS_NAME
+     		, D.DOC_NAME
+		FROM   APPROVAL A 
+			   LEFT JOIN APPROVAL_HISTORY B ON A.APP_NO = B.APP_NO
+       		   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+       		   LEFT JOIN APPROVAL_DOC D ON A.DOC_ID = D.DOC_ID
+		WHERE  
+			(B.APP_TYPE = '1차결재권자' OR B.APP_TYPE = '2차결재권자' OR B.APP_TYPE = '최종결재권자' OR B.APP_TYPE = '협조')
+       		AND B.EMP_NO = #{empNo} AND (A.APP_STATUS = '결재완료' OR A.APP_STATUS = '반려')
+	</select>
+	
+	<select id="selectCompListCount" resultType="int">
+		select count(*)
+		FROM   APPROVAL A 
+			   LEFT JOIN APPROVAL_HISTORY B ON A.APP_NO = B.APP_NO
+       		   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+		WHERE  
+			(B.APP_TYPE = '1차결재권자' OR B.APP_TYPE = '2차결재권자' OR B.APP_TYPE = '최종결재권자' OR B.APP_TYPE = '협조')
+       		AND B.EMP_NO = #{empNo} AND A.APP_STATUS = '결재완료'
+		<include refid="search" />
+		order by A.app_up_date desc
+	</select>	
+	
+	<select id="selectRefApprovalList" resultType="approval">
+		SELECT 
+			  A.APP_NO
+			, A.EMP_NO
+			, A.DOC_ID
+			, A.APP_TITLE
+			, A.APP_CONTENT
+			, A.APP_STATUS
+			, A.APP_UP_DATE
+     		, B.EMP_NO
+     		, B.APP_TYPE
+     		, C.EMP_NAME
+     		, C.DEPT_NAME
+     		, C.PS_NAME
+     		, D.DOC_NAME
+		FROM   APPROVAL A 
+			   LEFT JOIN APPROVAL_HISTORY B ON A.APP_NO = B.APP_NO
+       		   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+       		   LEFT JOIN APPROVAL_DOC D ON A.DOC_ID = D.DOC_ID
+		WHERE  
+			B.APP_TYPE = '참조'
+       		AND B.EMP_NO = #{empNo} AND A.APP_STATUS != '결재완료'
+	</select>
+	
+	<select id="selectRefListCount" resultType="int">
+		select count(*)
+		FROM   APPROVAL A 
+			   LEFT JOIN APPROVAL_HISTORY B ON A.APP_NO = B.APP_NO
+       		   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+		WHERE  
+			B.APP_TYPE = '참조'
+       		AND B.EMP_NO = #{empNo} AND A.APP_STATUS != '결재완료'
+		<include refid="search" />
+		order by A.app_up_date desc
+	</select>	
+	
+	<select id="selectReadApprovalList" resultType="approval">
+		SELECT 
+			  A.APP_NO
+			, A.EMP_NO
+			, A.DOC_ID
+			, A.APP_TITLE
+			, A.APP_CONTENT
+			, A.APP_STATUS
+			, A.APP_UP_DATE
+     		, B.EMP_NO
+     		, B.APP_TYPE
+     		, C.EMP_NAME
+     		, C.DEPT_NAME
+     		, C.PS_NAME
+     		, D.DOC_NAME
+		FROM   APPROVAL A 
+			   LEFT JOIN APPROVAL_HISTORY B ON A.APP_NO = B.APP_NO
+       		   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+       		   LEFT JOIN APPROVAL_DOC D ON A.DOC_ID = D.DOC_ID
+		WHERE  
+			B.APP_TYPE = '회람'
+       		AND B.EMP_NO = #{empNo} AND A.APP_STATUS = '결재완료'
+	</select>
+	
+	<select id="selectReadListCount" resultType="int">
+		select count(*)
+		FROM   APPROVAL A 
+			   LEFT JOIN APPROVAL_HISTORY B ON A.APP_NO = B.APP_NO
+       		   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+		WHERE  
+			B.APP_TYPE = '회람'
+       		AND B.EMP_NO = #{empNo} AND A.APP_STATUS = '결재완료'
+		<include refid="search" />
+		order by A.app_up_date desc
+	</select>	
+	
+	<select id="selectRejApprovalList" resultType="approval">
+		SELECT 
+			  A.APP_NO
+			, A.EMP_NO
+			, A.DOC_ID
+			, A.APP_TITLE
+			, A.APP_CONTENT
+			, A.APP_STATUS
+			, A.APP_UP_DATE
+     		, C.EMP_NAME 
+     		, C.DEPT_NAME
+     		, C.PS_NAME
+     		, D.DOC_NAME
+		FROM   APPROVAL A 
+       		   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+       		   LEFT JOIN APPROVAL_DOC D ON A.DOC_ID = D.DOC_ID
+		WHERE  
+       		A.EMP_NO = #{empNo} AND A.APP_STATUS = '반려'
+       	<include refid="search" />
+		order by A.app_up_date desc
+	</select>
+	
+	<select id="selectRejListCount" resultType="int">
+		select count(*)
+		FROM   APPROVAL A 
+       		   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+       		   LEFT JOIN APPROVAL_DOC D ON A.DOC_ID = D.DOC_ID
+		WHERE  
+       		A.EMP_NO = #{empNo} AND A.APP_STATUS = '반려'
+		<include refid="search" />
+		order by A.app_up_date desc
+	</select>	
+	
+	<!-- 임시목록 -->
+	<select id="selectTempApprovalList" resultType="approval">
+		SELECT
+		    A.APP_NO
+		   ,A.EMP_NO
+		   ,A.DOC_ID
+		   ,A.APP_TITLE
+		   ,A.APP_CONTENT
+		   ,A.APP_STATUS
+		   ,A.APP_UP_DATE
+		   ,A.APP_TEMP
+		   ,B.EMP_NAME
+		   ,B.DEPT_NAME
+		   ,C.DOC_NAME
+		FROM
+		    APPROVAL A
+		    LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		    LEFT JOIN APPROVAL_DOC C ON A.DOC_ID = C.DOC_ID
+		WHERE A.APP_STATUS = #{appStatus} AND A.EMP_NO = #{empNo} AND A.APP_TEMP = 'Y' AND A.IS_DEL='N'
+		<include refid="search" />
+		ORDER BY APP_NO DESC
+	</select>
+	
+	<select id="selectTempListCount" resultType="int">
+		select count(*)
+		from approval A
+			 LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		where A.app_no is not null and A.app_temp='Y'
+		<include refid="search" />
+		order by A.app_up_date desc
+	</select>	
+	
+	
+	<!-- 임시저장 -->
+	<insert id="insertTempApproval">
+		INSERT INTO APPROVAL (
+		    APP_NO
+		   ,EMP_NO
+		   ,DOC_ID
+		   ,APP_TITLE
+		   ,APP_CONTENT
+		   ,APP_STATUS
+		   ,APP_TEMP
+		) VALUES (
+		    #{appNo}
+		   ,#{empNo}
+		   ,#{docId}
+		   ,#{appTitle}
+		   ,#{appContent}
+		   ,#{appStatus}
+		   ,'Y'
+		)
+		<selectKey keyProperty="appNo" resultType="int" order="BEFORE">
+			SELECT SEQ_APPROVAL.nextval FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<select id="selectTempApproval" resultType="approval">
+		SELECT
+		    APP_NO
+		   ,EMP_NO
+		   ,DOC_ID
+		   ,APP_TITLE
+		   ,APP_CONTENT
+		   ,APP_STATUS
+		   ,APP_UP_DATE
+		   ,APP_TEMP
+		FROM
+		    APPROVAL
+		WHERE 
+			APP_NO = #{appNo}
+	</select>
+	
+	<update id="updateTempApproval" parameterType="approval">
+		UPDATE 
+			APPROVAL
+		SET
+		    DOC_ID = #{docId, jdbcType=VARCHAR}
+		  , APP_TITLE = #{appTitle}
+		  , APP_CONTENT = #{appContent}
+		WHERE
+			APP_NO = #{appNo}
+	</update>
+	
+	<update id="deleteTempApproval" parameterType="approval">
+		UPDATE 
+			APPROVAL
+		SET
+			IS_DEL = 'Y'
+		WHERE
+			APP_NO = #{appNo}
+	</update>
+	
+	<update id="updateAppStatusByAppNo" parameterType="approval">
+		UPDATE 
+			APPROVAL
+		SET
+			APP_STATUS = #{appStatus}
+		WHERE
+			APP_NO = #{appNo}
+	</update>
+	
+	
+	
+	<select id="selectUncheckCount" resultType="int">
+		SELECT
+    		COUNT(A.APP_NO)
+		FROM
+			APPROVAL A
+			LEFT JOIN APPROVAL_HISTORY B ON A.APP_NO = B.APP_NO
+			WHERE A.APP_STATUS = '진행중' AND B.EMP_NO = #{empNo} AND B.APP_SIGN = 'N'
+			AND B.APP_TYPE <![CDATA[ <> ]]> '상신자'
+			AND B.APP_TYPE <![CDATA[ <> ]]> '참조'
+			AND B.APP_TYPE <![CDATA[ <> ]]> '회람'
+	</select>
+	
+	<select id="selectAppLogList" resultType="approval">
+		SELECT
+		    A.APP_NO, B.DOC_NAME, A.APP_TITLE, C.EMP_NO, D.DEPT_NAME,
+		    D.EMP_NAME, D.PS_NAME, C.APP_TYPE, C.APP_DATE, C.APP_SIGN
+		FROM
+		    APPROVAL A
+		    LEFT JOIN APPROVAL_DOC B ON A.DOC_ID = B.DOC_ID
+		    LEFT JOIN APPROVAL_HISTORY C ON A.APP_NO = C.APP_NO
+		    LEFT JOIN VIEW_EMP D ON C.EMP_NO = D.EMP_NO
+		WHERE
+			(APP_TYPE <![CDATA[ <> ]]> '참조' AND APP_TYPE <![CDATA[ <> ]]> '회람') 
+		ORDER BY
+		    A.APP_NO DESC, C.APP_LEVEL
+	</select>
+	
+	<select id="selectAppLogListCount" resultType="int">
+		SELECT
+		    COUNT(A.APP_NO)
+		FROM
+		    APPROVAL A
+		    LEFT JOIN APPROVAL_DOC B ON A.DOC_ID = B.DOC_ID
+		    LEFT JOIN APPROVAL_HISTORY C ON A.APP_NO = C.APP_NO
+		    LEFT JOIN VIEW_EMP D ON C.EMP_NO = D.EMP_NO
+		WHERE
+			(APP_TYPE <![CDATA[ <> ]]> '참조' AND APP_TYPE <![CDATA[ <> ]]> '회람') 
+		ORDER BY
+		    A.APP_NO DESC, C.APP_LEVEL
+	</select>
+	
+	<!-- 메인 목록 출력용 -->
+	<select id="selectAllReceiveList" resultType="approval">
+		SELECT
+		    A.APP_NO
+		  , A.APP_STATUS
+		  , A.APP_TITLE
+		  , A.EMP_NO
+		  , A.APP_UP_DATE
+		  , B.EMP_NAME
+		FROM   
+		    APPROVAL A 
+		    LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		    LEFT JOIN APPROVAL_HISTORY C ON A.APP_NO = C.APP_NO
+		WHERE
+		    C.EMP_NO = #{empNo} AND C.APP_TYPE <![CDATA[ <> ]]> '상신자'
+		ORDER BY
+			A.APP_NO DESC
+	</select>
+</mapper>

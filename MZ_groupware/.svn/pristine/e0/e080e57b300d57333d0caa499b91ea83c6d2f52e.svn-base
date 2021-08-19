@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Message-Mapper">
+
+	<sql id="pagetype">
+		<!-- 수신함은 로그인 유저가 수신자 -->
+		<if test="pageType == 'receive'.toString()">
+			and A.MSS_RECEIVER = #{empNo}
+			and A.RECEIVER_DEL = 'N'
+			and C.EMP_NAME like '%'||#{keyword}||'%'
+		</if>
+		<!-- 발신함은 로그인 유저가 발신자 -->
+		<if test="pageType == 'send'.toString()">
+			and A.EMP_NO = #{empNo}
+			and A.SENDER_DEL = 'N'
+			and B.EMP_NAME like '%'||#{keyword}||'%'
+		</if>
+	</sql>
+	<sql id="opentype">
+		<!-- 수신함은 로그인 유저가 수신자 -->
+		<if test="openType == 'open'.toString()">
+			and A.MSS_OPEN_STATUS = 'Y'
+		</if>
+		<!-- 발신함은 로그인 유저가 발신자 -->
+		<if test="openType == 'close'.toString()">
+			and A.MSS_OPEN_STATUS = 'N'
+		</if>
+		<if test="openType == 'all'.toString()">
+		</if>
+	</sql>
+	
+	<!-- 쪽지함 리스트 가져오기 -->
+	<select id="selectAllMessageList" resultType="msg">
+		select A.MSS_NO as mssNo
+			 , A.EMP_NO as empNo
+			 , A.MSS_RECEIVER as mssReceiver
+			 , A.MSS_CONTENT as mssContent
+			 , to_char(A.MSS_SENDDATE, 'MM-DD HH24:MI') as mssSenddate
+			 , A.MSS_OPEN_STATUS as mssOpenStatus
+			 , A.RECEIVER_DEL as receiverDel
+			 , A.SENDER_DEL as senderDel
+			 , B.EMP_NAME as sender
+			 , C.EMP_NAME as receiver
+		from message A 
+            inner join employee B on A.emp_no = B.emp_no 
+            inner join employee C on A.mss_receiver = C.emp_no
+		where 1=1
+        <include refid="pagetype" />
+        <include refid="opentype" />
+        order by A.MSS_NO desc
+	</select>
+	
+	<select id="selectMessageByMssNo" resultType="msg">
+		select A.MSS_NO
+			 , A.EMP_NO
+			 , A.MSS_RECEIVER
+			 , A.MSS_CONTENT
+			 , to_char(A.MSS_SENDDATE, 'MM-DD HH24:MI') mssSenddate
+			 , A.MSS_OPEN_STATUS
+			 , A.RECEIVER_DEL
+			 , A.SENDER_DEL
+			 , B.EMP_NAME as sender
+			 , C.EMP_NAME as receiver
+		from message A 
+            inner join employee B on A.emp_no = B.emp_no 
+            inner join employee C on A.mss_receiver = C.emp_no
+		where 1=1
+		and A.MSS_NO = #{mssNo}
+	</select>
+	
+	<!-- 읽음 처리 -->
+	<update id="chmodOpenStat" parameterType="int">
+		update message
+		set MSS_OPEN_STATUS = 'Y'
+		where MSS_NO = #{mssNo}
+	</update>
+	
+	<!-- 발신함 리스트 cnt가져오기 -->
+	<select id="selectReceiveAllListCount" resultType="int">
+		select count(*)
+		from message
+		where 1=1
+		and MSS_RECEIVER = #{empNo}
+	</select>
+	
+	<!-- 수신함 리스트 cnt 가져오기 -->
+	<select id="selectSendAllListCount" resultType="int">
+		select count(*)
+		from message
+		where 1=1
+		and emp_no = #{empNo}
+	</select>
+	
+	<!-- 메시지 보내기 -->
+	<update id="insertMessage">
+		insert into 
+        message(MSS_NO, EMP_NO, MSS_RECEIVER, MSS_CONTENT)
+        values(#{mssNo}, #{empNo}, #{mssReceiver}, #{mssContent})
+        <selectKey keyProperty="mssNo" resultType="int" order="BEFORE">
+        	select seq_message.nextval
+			from dual
+        </selectKey>
+	</update>
+	
+	<update id="deleteRecMessage">
+		update message
+		set RECEIVER_DEL = 'Y'
+		where MSS_NO = #{mssNo}
+	</update>
+	<update id="deleteSendMessage">
+		update message
+		set SENDER_DEL = 'Y'
+		where MSS_NO = #{mssNo}
+	</update>
+</mapper>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="Vacation-Mapper">
+	
+	<select id="selectMyUseVacation" parameterType="vacation" resultType="vacation">
+		SELECT
+		    a.vno as vNo
+		  , a.emp_no as empNo
+		  , a.vac_code as vacCode
+		  , a.vac_detail as vacDetail
+		  , a.vac_date as vacDate
+          , a.app_no as appNo
+		  , B.APP_STATUS as appStatus
+		  , a.vac_start as vacStart
+		  , a.vac_end as vacEnd
+		  , B.APP_UP_DATE as appUpDate
+		FROM
+		    vacation a inner join approval b on a.app_no = b.app_no
+		WHERE
+			a.emp_no = #{empNo}
+		AND 
+			B.APP_STATUS = '결재완료'
+	</select>
+	<select id="selectMyVacationList" parameterType="vacation" resultType="vacation">
+		SELECT
+		    a.vno as vNo
+		  , a.emp_no as empNo
+		  , a.vac_code as vacCode
+		  , a.vac_detail as vacDetail
+		  , a.vac_date as vacDate
+          , a.app_no as appNo
+		  , B.APP_STATUS as appStatus
+		  , a.vac_start as vacStart
+		  , a.vac_end as vacEnd
+		  , B.APP_UP_DATE as appUpDate
+		FROM
+		    vacation a inner join approval b on a.app_no = b.app_no
+		WHERE
+			a.emp_no = #{empNo}
+	</select>
+	
+	<select id="selectVacationByAppNo" resultType="vacation">
+		SELECT
+		    a.vno as vNo
+		  , a.emp_no as empNo
+		  , a.vac_code as vacCode
+		  , a.vac_detail as vacDetail
+		  , a.vac_date as vacDate
+          , a.app_no as appNo
+		  , B.APP_STATUS as appStatus
+		  , a.vac_start as vacStart
+		  , a.vac_end as vacEnd
+		  , B.APP_UP_DATE as appUpDate
+		FROM
+		    vacation a inner join approval b on a.app_no = b.app_no
+		WHERE
+			a.app_no = #{appNo}
+	</select>
+	
+	<update id="insertVacation">
+		INSERT INTO vacation (
+		    vno
+		  , emp_no
+		  , vac_detail
+		  , vac_date
+		  , app_no
+		  , vac_start
+		  , vac_end
+		) VALUES (
+		    SEQ_VACATION.NEXTVAL
+		  , #{empNo}
+		  , #{vacDetail}
+		  , #{vacDate}
+		  , #{appNo}
+		  , #{vacStart}
+		  , #{vacEnd}
+		)
+	</update>
+	
+</mapper>

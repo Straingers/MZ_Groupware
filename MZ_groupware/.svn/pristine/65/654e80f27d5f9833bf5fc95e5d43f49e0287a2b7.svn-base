@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<bean id="menuDAO" class="com.spring.dao.MenuDAOImpl"
+		  p:sqlSession-ref="sqlSession" />
+	
+	<bean id="employeeDAO" class="com.spring.dao.EmployeeDAOImpl" 
+		  p:sqlSession-ref="sqlSession"/>
+		  
+	<bean id="approvalDAO" class="com.spring.approval.dao.ApprovalDAOImpl" 
+	      p:sqlSession-ref="sqlSession" />
+
+	<bean id="approvalHistoryDAO" class="com.spring.approval.dao.ApprovalHistoryDAOImpl"
+		  p:sqlSession-ref="sqlSession" />
+	      
+	<bean id="attachDAO" class="com.spring.dao.AttachDAOImpl" 
+		  p:sqlSession-ref="sqlSession" />
+	
+	<bean id="approvalAttachDAO" class="com.spring.approval.dao.ApprovalAttachDAOImpl" 
+		  p:sqlSession-ref="sqlSession" />
+		  
+	<bean id="replyDAO" class="com.spring.dao.ReplyDAOImpl" 
+	      p:sqlSession-ref="sqlSession" />
+	      
+	<bean id="commuteDAO" class="com.spring.dao.CommuteDAOImpl" 
+	      p:sqlSession-ref="sqlSession2" />
+	<bean id="commuteChangeDAO" class="com.spring.dao.CommuteChangeDAOImpl"
+		  p:sqlSession-ref="sqlSession2" />
+	
+	<bean id="inoutTimeDAO" class="com.spring.dao.InoutTimeDAOImpl" 
+	      p:sqlSession-ref="sqlSession2" />
+	
+	<!-- Calendar -->      
+	<bean id="calendarDAO" class="com.spring.dao.CalendarDAOImpl"
+		  p:sqlSession-ref="sqlSession" />
+	      
+	<!-- NoticeBoard -->
+  	<bean id="noticeBoardDAO" class="com.spring.dao.NoticeBoardDAOImpl"
+		  p:sqlSession-ref="sqlSession"/>
+
+	<!-- Reservation -->
+  	<bean id="reservationDAO" class="com.spring.dao.ReservationDAOImpl"
+		  p:sqlSession-ref="sqlSession"/>
+
+	<!-- 커뮤니티 게시판 -->
+  	<bean id="communityBoardDAO" class="com.spring.dao.CommunityBoardDAOImpl"
+		  p:sqlSession-ref="sqlSession"/>
+	<bean id="communityReplyDAO" class="com.spring.dao.CommunityReplyDAOImpl"
+		  p:sqlSession-ref="sqlSession"/>
+	<!-- 커뮤니티 게시판 -->      
+	 
+	 <!-- 쪽지함 -->
+	 <bean id="messageDAO" class="com.spring.msg.dao.MessageDAOImpl"
+	 	p:sqlSession-ref="sqlSession"/>
+	
+	<!-- 관리자 - 근태관리 -->
+	<bean id="holidayDAO" class="com.spring.admin.commute.dao.HolidayDAOImpl"
+		  p:sqlSession-ref="sqlSession" />
+	<bean id="vacationDAO" class="com.spring.dao.VacationDAOImpl"
+		  p:sqlSession-ref="sqlSession" />
+	<bean id="vacationTypeDAO" class="com.spring.admin.commute.dao.VacationTypeDAOImpl" 
+		  p:sqlSession-ref="sqlSession"/>
+	
+	<!-- 관리자 - 게시판관리 -->
+	<bean id="additionalTypeDAO" class="com.spring.admin.additional.dao.AdditionalTypeDAOImpl"
+		  p:sqlSession-ref="sqlSession"/>
+	<bean id="additionalBoardDAO" class="com.spring.admin.additional.dao.AdditionalBoardDAOImpl" 
+		  p:sqlSession-ref="sqlSession"/>
+	<bean id="additionalBoardReplyDAO" class="com.spring.admin.additional.dao.AdditionalBoardReplyDAOImpl"
+		  p:sqlSession-ref="sqlSession"/>
+	
+	<bean id="notificationDAO" class="com.spring.notification.dao.NotificationDAOImpl"
+	      p:sqlSession-ref="sqlSession"/>
+	
+	 <!-- 회사내규 -->
+	 <bean id="officeDAO" class="com.spring.office.dao.OfficeDAOImpl"
+		  p:sqlSession-ref="sqlSession"/>
+
+	 <!-- 신입사원 교육자료 -->
+	 <bean id="otDAO" class="com.spring.ot.dao.OtDAOImpl"
+		  p:sqlSession-ref="sqlSession"/>
+		  
+		
+		  
+
+	<bean id="menuService" class="com.spring.service.MenuServiceImpl"
+	  	  p:menuDAO-ref="menuDAO" />
+
+	<bean id="employeeService" class="com.spring.service.EmployeeServiceImpl"
+		  p:employeeDAO-ref="employeeDAO"
+		  p:commuteDAO-ref="commuteDAO" />
+	 	  
+	<bean id="approvalHistoryService" class="com.spring.approval.service.ApprovalHistoryServiceImpl"
+		  p:approvalHistoryDAO-ref="approvalHistoryDAO" />
+	  
+	<bean id="commuteService" class="com.spring.service.CommuteServiceImpl"
+		  p:commuteDAO-ref="commuteDAO"
+		  p:inoutTimeDAO-ref="inoutTimeDAO" />
+	<bean id="commuteChangeService" class="com.spring.service.CommuteChangeServiceImpl"
+		  p:commuteChangeDAO-ref="commuteChangeDAO" />
+		  
+	<bean id="vacationService" class="com.spring.service.VacationServiceImpl" 
+		  p:vacationDAO-ref="vacationDAO"/>
+	
+	<bean id="inoutTimeService" class="com.spring.service.InoutTimeServiceImpl"
+		  p:inoutTimeDAO-ref="inoutTimeDAO" />
+		  
+	<!-- 커뮤니티 게시판 -->
+	<bean id="CommunityBoardService" class="com.spring.service.CommunityBoardServiceImpl"
+	  	  p:communityBoardDAO-ref="communityBoardDAO" 
+	  	  p:communityReplyDAO-ref="communityReplyDAO"
+	  	  p:attachDAO-ref="attachDAO"/>
+	<bean id="communityReplyService" class="com.spring.service.CommunityReplyServiceImpl"
+	  	  p:communityReplyDAO-ref="communityReplyDAO" />
+	<!-- 커뮤니티 게시판 -->  	  
+	  	  
+	<!-- Calendar --> 
+	<bean id="calendarService" class="com.spring.service.CalendarServiceImpl"
+		  p:calendarDAO-ref="calendarDAO" />
+
+	<!-- NoticeBoard -->
+	<bean id="noticeBoardService" class="com.spring.service.NoticeBoardServiceImpl"
+	  	  p:noticeBoardDAO-ref="noticeBoardDAO" 
+	  	  p:attachDAO-ref="attachDAO"/>
+
+	<!-- Reservation-->
+	<bean id="reservationService" class="com.spring.service.ReservationServiceImpl"
+	  	  p:reservationDAO-ref="reservationDAO" />
+	  	  
+	<!-- 쪽지함 -->
+	<bean id="messageService" class="com.spring.msg.service.MessageServiceImpl"
+		  p:messageDAO-ref="messageDAO" />
+		  
+	<!-- 관리자 - 근무일 설정 -->
+	<bean id="holidayService" class="com.spring.admin.commute.service.HolidayServiceImpl"
+		  p:holidayDAO-ref="holidayDAO" />
+	<bean id="vacationTypeService" class="com.spring.admin.commute.service.VacationTypeServiceImpl"
+		  p:vacationTypeDAO-ref="vacationTypeDAO" 
+		  p:emplyeeDAO-ref="employeeDAO"/>
+	
+	<!-- 관리자 - 게시판관리 -->
+	<bean id="additionalTypeService" class="com.spring.admin.additional.service.AdditionalTypeServiceImpl"
+		  p:additionalTypeDAO-ref="additionalTypeDAO"
+		  p:menuDAO-ref="menuDAO"/>
+	<bean id="additionalBoardService" class="com.spring.admin.additional.service.AdditionalBoardServiceImpl"
+		  p:additionalBoardDAO-ref="additionalBoardDAO"
+		  p:attachDAO-ref="attachDAO"/>
+	<bean id="additionalBoardReplyService" class="com.spring.admin.additional.service.AdditionalBoardReplyServiceImpl"
+		  p:additionalBoardReplyDAO-ref="additionalBoardReplyDAO"/>
+	
+	<!-- 회사내규 -->
+	<bean id="officeService" class="com.spring.office.service.OfficeServiceImpl"
+			p:officeDAO-ref="officeDAO"
+		  p:attachDAO-ref="attachDAO"/>
+
+	<!-- 신입사원 교육자료 -->
+	<bean id="otService" class="com.spring.ot.service.OtServiceImpl"
+			p:otDAO-ref="otDAO"
+		  p:attachDAO-ref="attachDAO"/>
+		  
+	<bean id="notificationService" class="com.spring.notification.service.NotificationServiceImpl"
+		  p:notificationDAO-ref="notificationDAO"/>
+		  
+	<!-- 자료실 -->
+	<bean id="pdsDAO" class="com.spring.pds.dao.PdsDAOImpl"
+		  p:sqlSession-ref="sqlSession"/>
+	
+	<!-- 신입사원 교육자료 -->
+	<bean id="pdsService" class="com.spring.pds.service.PdsServiceImpl"
+			p:pdsDAO-ref="pdsDAO"
+		  p:attachDAO-ref="attachDAO"/>
+		  
+	<!-- 자료실 -->
+	<bean id="cloudDAO" class="com.spring.cloud.dao.CloudDAOImpl"
+		  p:sqlSession-ref="sqlSession"/>
+	
+	<!-- 자료실 -->
+	<bean id="cloudService" class="com.spring.cloud.service.CloudServiceImpl"
+			p:cloudDAO-ref="cloudDAO"/>
+</beans>

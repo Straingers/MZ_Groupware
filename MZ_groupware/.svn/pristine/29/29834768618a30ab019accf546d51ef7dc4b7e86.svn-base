@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TaskReceiverLine-Mapper">
+	
+	<select id="selectLineList" resultType="taskReceiver">
+		select AA.TASKLINE_ID
+        , AA.EMP_NO
+        , AA.TASKLINE_NAME
+        , AA.EMPNO ccEmpNo
+        , AA.EMPNAME ccEmpName
+        , BB.EMPNO recEmpNo
+        , BB.empName recEmpName
+from (SELECT A.TASKLINE_ID
+        , A.EMP_NO
+        , A.TASKLINE_NAME
+        , B.TASKLINE_TYPE
+        , LISTAGG(B.TASKLINE_EMPNO, ',') WITHIN GROUP (ORDER BY B.TASKLINE_TYPE) empNo
+        , LISTAGG(C.EMP_NAME, ',') WITHIN GROUP (ORDER BY B.TASKLINE_TYPE) empName
+        FROM   TASK_RECEIVER_LINE A
+               LEFT JOIN TASK_RECEIVER_LINE_DETAIL B ON A.TASKLINE_ID = B.TASKLINE_ID
+               LEFT JOIN VIEW_EMP C ON B.TASKLINE_EMPNO = C.EMP_NO
+        where TASKLINE_TYPE = 'cc' AND A.IS_DEL = 'N'
+        GROUP BY A.TASKLINE_ID, A.EMP_NO,  A.TASKLINE_NAME, B.TASKLINE_TYPE) AA
+    , (SELECT A.TASKLINE_ID
+            , A.EMP_NO
+            , A.TASKLINE_NAME
+            , B.TASKLINE_TYPE
+            , LISTAGG(B.TASKLINE_EMPNO, ',') WITHIN GROUP (ORDER BY B.TASKLINE_TYPE) empNo
+            , LISTAGG(C.EMP_NAME, ',') WITHIN GROUP (ORDER BY B.TASKLINE_TYPE) empName
+        FROM   TASK_RECEIVER_LINE A
+               LEFT JOIN TASK_RECEIVER_LINE_DETAIL B ON A.TASKLINE_ID = B.TASKLINE_ID
+               LEFT JOIN VIEW_EMP C ON B.TASKLINE_EMPNO = C.EMP_NO
+        where TASKLINE_TYPE = 'rec' AND A.IS_DEL = 'N'
+        GROUP BY A.TASKLINE_ID, A.EMP_NO,  A.TASKLINE_NAME, B.TASKLINE_TYPE) BB
+        where AA.TASKLINE_ID = BB.TASKLINE_ID and AA.EMP_NO = #{empNo}
+	</select>
+	
+	<select id="selectLine" resultType="taskReceiver">
+		SELECT
+		    TASKLINE_ID
+		  , EMP_NO
+		  , TASKLINE_NAME
+		FROM
+		    TASK_RECEIVER_LINE
+		WHERE
+			TASKLINE_ID = #{tasklineId}
+	</select>
+
+	<insert id="insertLine">
+		INSERT INTO TASK_RECEIVER_LINE (
+		    TASKLINE_ID
+		  , EMP_NO
+		  , TASKLINE_NAME
+		) VALUES (
+		    #{tasklineId}
+		  , #{empNo}
+		  , #{tasklineName}
+		)
+		<selectKey keyProperty="tasklineId" resultType="int" order="BEFORE">
+			SELECT SEQ_TASK_RECEIVER_LINE.NEXTVAL FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<update id="updateLine">
+		UPDATE TASK_RECEIVER_LINE
+			SET
+				TASKLINE_NAME = #{tasklineName}
+		WHERE
+			TASKLINE_ID = #{tasklineId}
+	</update>
+	
+	<delete id="deleteLine">
+		UPDATE TASK_RECEIVER_LINE
+		    SET
+		        IS_DEL = 'Y'
+		WHERE
+		    TASKLINE_ID = #{tasklineId}
+	</delete>
+
+</mapper>

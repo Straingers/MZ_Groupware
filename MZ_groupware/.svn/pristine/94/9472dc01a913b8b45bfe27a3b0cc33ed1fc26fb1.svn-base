@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	<context:property-placeholder file-encoding="utf-8"
+								  location="classpath:com/spring/properties/*.properties"/>
+			
+	<!-- summerNote -->
+	<bean id="imgPath" class="java.lang.String">
+   	<constructor-arg value="${summernote.img}" />
+   </bean>
+	
+	<!-- file upload -->
+  <bean id="fileUploadPath" class="java.lang.String">
+  	<constructor-arg value="${pds.upload}" />
+  </bean>	
+  
+  <!-- attach upload -->
+  <bean id="attachUploadPath" class="java.lang.String">
+  	<constructor-arg value="${attach.upload}" />
+  </bean>
+  
+  <!-- 업무관리 attach upload -->
+  <bean id="reportAttachUploadPath" class="java.lang.String">
+  	<constructor-arg value="${reportAttach.upload}"/>
+  </bean>	
+  
+  <!-- member picture -->
+  <bean id="memberPicturePath" class="java.lang.String">
+  	<constructor-arg value="${member.picture.upload}" />
+  </bean>
+
+  <!-- officeRules file -->
+  <bean id="officeRulesAttachUploadPath" class="java.lang.String">
+  	<constructor-arg value="${officeRules.upload}" />
+  </bean>
+  
+  <!-- officeOt file -->
+  <bean id="otAttachUploadPath" class="java.lang.String">
+  	<constructor-arg value="${ot.upload}" />
+  </bean>
+
+  <!-- officePds file -->
+  <bean id="pdsAttachUploadPath" class="java.lang.String">
+  	<constructor-arg value="${ot.upload}" />
+  </bean>
+								  
+	<import resource="./dataSource-context.xml"/>	
+	<import resource="./security-context.xml"/>		
+	<import resource="./application-context.xml"/>	
+</beans>

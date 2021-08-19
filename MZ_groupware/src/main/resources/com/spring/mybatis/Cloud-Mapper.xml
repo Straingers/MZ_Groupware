@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Cloud-Mapper">
+	<sql id="mainBoard">
+		<if test="flag == 'board'">
+			AND CLOUD_FOLDER_CODE != '-1'
+		</if>
+		<if test="flag == 'modify'">
+			AND CLOUD_FOLDER_CODE != '-1'
+			AND CLOUD_FOLDER_CODE != '0'
+		</if>
+	</sql>
+	<select id="selectMyFolderList" resultType="folder">
+		SELECT CLOUD_FOLDER_CODE as folderCode
+			, CLOUD_FOLDER_NAME as folderName
+			, EMP_NO as empNo
+			, CLOUD_FOLDER_LEVEL as folderLevel
+			, CLOUD_FOLDER_SUPER as folderSuper
+		FROM CLOUD_FOLDER
+		WHERE IS_DEL = 'N'
+		AND (EMP_NO = #{empNo} OR EMP_NO = '000000')
+		<include refid="mainBoard" />
+		ORDER BY CLOUD_FOLDER_CODE ASC
+	</select>
+	
+	<select id="selectFolderByFolderCode" resultType="folder">
+		SELECT CLOUD_FOLDER_CODE as folderCode
+			, CLOUD_FOLDER_NAME as folderName
+			, EMP_NO as empNo
+			, CLOUD_FOLDER_LEVEL as folderLevel
+			, CLOUD_FOLDER_SUPER as folderSuper
+		FROM CLOUD_FOLDER
+		WHERE CLOUD_FOLDER_CODE = #{cloudFolderCode}
+		AND IS_DEL = 'N'
+	</select>
+	
+	<select id="selectDeepestFolderDepth" resultType="int">
+		SELECT MAX(CLOUD_FOLDER_LEVEL)
+		FROM CLOUD_FOLDER
+		WHERE EMP_NO = #{empNo}
+	</select>
+	
+	<select id="selectFileListByFolderCodeAttacher" resultType="file">
+		SELECT CLOUD_NO
+			, CLOUD_FOLDER_CODE
+			, CLOUD_UPLOADPATH
+			, CLOUD_FILENAME
+			, CLOUD_FILETYPE
+			, CLOUD_ATTACHER
+			, to_char(CLOUD_REGDATE, 'YY.MM.DD HH:MI') cloudRegdate
+			, IS_DEL
+		FROM CLOUD
+		WHERE 1=1
+		AND CLOUD_FOLDER_CODE = #{cloudFolderCode} 
+		AND CLOUD_ATTACHER = #{cloudAttacher}
+		AND IS_DEL = 'N'
+	</select>
+	
+	<select id="selectFileByCloudNo" resultType="file">
+		SELECT CLOUD_NO
+			, CLOUD_FOLDER_CODE
+			, CLOUD_UPLOADPATH
+			, CLOUD_FILENAME
+			, CLOUD_FILETYPE
+			, CLOUD_ATTACHER
+			, to_char(CLOUD_REGDATE, 'YY.MM.DD HH:MI') cloudRegdate
+			, IS_DEL
+		FROM CLOUD
+		WHERE 1=1
+		AND CLOUD_No = #{cloudNo} 
+	</select>
+	
+	<update id="insertFile">
+		insert into CLOUD(
+			CLOUD_NO
+			, CLOUD_FOLDER_CODE
+			, CLOUD_UPLOADPATH
+			, CLOUD_FILENAME
+			, CLOUD_FILETYPE
+			, CLOUD_ATTACHER
+		)
+		values(
+			seq_cloud.nextval
+			, #{cloudFolderCode}
+			, #{cloudUploadpath}
+			, #{cloudFilename}
+			, #{cloudFiletype}
+			, #{cloudAttacher}
+		)
+	</update>
+	
+	<update id="insertFolder">
+		insert into CLOUD_FOLDER(
+			CLOUD_FOLDER_CODE
+			, CLOUD_FOLDER_NAME
+			, EMP_NO
+			, CLOUD_FOLDER_LEVEL
+			, CLOUD_FOLDER_SUPER
+		)
+		values(
+			seq_folder.nextval
+			, #{folderName}
+			, #{empNo}
+			, #{folderLevel}
+			, #{folderSuper}
+		)
+	</update>
+	
+	<update id="realDeleteFile">
+		update CLOUD 
+		set IS_DEL = 'X'
+			, CLOUD_FOLDER_CODE = '999999'
+		where CLOUD_NO = #{cloudNo}
+	</update>
+	
+	<update id="deleteFile">
+		update CLOUD 
+		set IS_DEL = 'Y'
+			, CLOUD_FOLDER_CODE = '999999'
+		where CLOUD_NO = #{cloudNo}
+	</update>
+	
+	<update id="deleteFileInFolder">
+		update CLOUD 
+		set	IS_DEL = 'Y'
+			, CLOUD_FOLDER_CODE = '999999'
+		where CLOUD_FOLDER_CODE = #{folderCode}
+	</update>
+	
+	<update id="deleteFolder">
+		update CLOUD_FOLDER
+		set IS_DEL = 'Y'
+		where CLOUD_FOLDER_CODE = #{folderCode}
+	</update>
+	
+	<update id="updateFolder" parameterType="file">
+		update CLOUD_FOLDER
+		set CLOUD_FOLDER_NAME = #{folderName}
+		where CLOUD_FOLDER_CODE = #{folderCode}
+	</update>
+	
+	<select id="selectTrashFileListByAttacher" resultType="file">
+		SELECT CLOUD_NO
+			, CLOUD_FOLDER_CODE
+			, CLOUD_UPLOADPATH
+			, CLOUD_FILENAME
+			, CLOUD_FILETYPE
+			, CLOUD_ATTACHER
+			, to_char(CLOUD_REGDATE, 'YY.MM.DD HH:MI') cloudRegdate
+			, IS_DEL
+		FROM CLOUD
+		WHERE CLOUD_FOLDER_CODE = '999999'
+		AND CLOUD_ATTACHER = #{cloudAttacher}
+		AND IS_DEL = 'Y'
+	</select>
+	
+	
+	
+	
+	<!-- 로그목록 -->
+	<select id="selectCloudLogList" resultType="file">
+		SELECT
+		    A.CLOUD_FOLDER_CODE
+		   ,A.CLOUD_FOLDER_NAME
+		   ,A.EMP_NO
+		   ,B.CLOUD_NO
+		   ,SUBSTR(B.CLOUD_FILENAME, 35) CLOUD_FILENAME
+		   ,B.CLOUD_ATTACHER
+		   ,B.CLOUD_REGDATE cloudDate
+		   ,B.IS_DEL
+		   ,C.EMP_NAME
+		   ,C.DEPT_NAME
+		   ,C.PS_NAME
+		FROM
+		    CLOUD_FOLDER A
+		    INNER JOIN CLOUD B ON A.CLOUD_FOLDER_CODE = B.CLOUD_FOLDER_CODE
+		    INNER JOIN VIEW_EMP C ON B.CLOUD_ATTACHER = C.EMP_NO
+		ORDER BY
+			B.CLOUD_NO DESC
+	</select>
+	
+	<select id="selectCloudLogListCount" resultType="int">
+		SELECT
+			COUNT(B.CLOUD_NO)
+		FROM
+			CLOUD_FOLDER A
+		    INNER JOIN CLOUD B ON A.CLOUD_FOLDER_CODE = B.CLOUD_FOLDER_CODE
+		    INNER JOIN VIEW_EMP C ON B.CLOUD_ATTACHER = C.EMP_NO
+	</select>
+	
+	<select id="deleteAttachList" resultType="file">
+		SELECT
+		    A.CLOUD_FOLDER_CODE
+		   ,A.CLOUD_FOLDER_NAME
+		   ,A.EMP_NO
+		   ,B.CLOUD_NO
+		   ,B.CLOUD_FILENAME
+		   ,B.CLOUD_ATTACHER
+		   ,B.CLOUD_REGDATE cloudDate
+		   ,B.IS_DEL
+		FROM
+		    CLOUD_FOLDER A
+		    INNER JOIN CLOUD B ON A.CLOUD_FOLDER_CODE = B.CLOUD_FOLDER_CODE
+		WHERE
+			B.IS_DEL = 'X'		
+	</select>
+	
+	<delete id="deleteCloutAttach">
+		DELETE
+		FROM
+			CLOUD
+		WHERE
+			IS_DEL = 'X'
+	</delete>
+</mapper>

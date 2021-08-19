@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="NoticeBoard-Mapper">
+
+	<!-- 다음 시퀀스 가져오기 -->
+	<select id="selectNoticeBoardSequenceNextValue" resultType="int">
+		select seq_notice_board.nextVal
+		from dual
+	</select>
+	
+	<sql id="search">
+		<if test="searchType == 't'.toString()">
+			and notice_title like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			and notice_content like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tw'.toString()">
+			and (
+			notice_title like '%'||#{keyword}||'%'
+			or
+			notice_content like '%'||#{keyword}||'%'
+			)
+		</if>
+	</sql>
+	
+	<!-- popupCount -->
+	<select id="popupCount" resultType="int">
+	    select count(*)
+        from notice_board
+        where notice_popup = 'Y'
+	</select>
+
+	<!-- 관리자 확인 -->
+	<select id="adminCheck" parameterType="String" resultType="int">
+		select count(*)
+		from admin
+		where emp_no = #{empNo}
+	</select>
+	
+	<!-- 조회수 증가 -->
+	<update id="increaseViewCount" parameterType="int"><!-- detail 할 때 -->
+		update notice_board
+		set notice_viewcnt = notice_viewcnt + 1
+		where notice_no =#{notice_no}
+	</update>
+	
+	<!-- 개수 조회 -->
+	<select id="selectSearchNoticeBoardListCount" resultType="int">
+		select
+		count(*)
+		from notice_board
+		where notice_no is not null and is_del='N'
+		<include refid="search" />
+		order by notice_regdate desc
+	</select>
+	
+	<!-- main화면 리스트 조회 -->
+	<select id="selectMainNoticeBoardPopupList" resultType="noticeBoard">
+		SELECT
+		    notice_no
+		   ,admin_id
+		   ,notice_title
+		   ,notice_content
+		   ,notice_regdate
+		   ,notice_viewcnt
+		   ,notice_startdate
+		   ,notice_enddate
+		   ,notice_updatedate
+		   ,notice_popup
+		   ,notice_important
+		   ,is_del
+		FROM
+		    notice_board
+		where 1=1 
+		and notice_popup = 'Y'
+		and SYSDATE 
+            BETWEEN notice_startdate AND notice_enddate+1
+	</select>
+
+	<update id="updateNoticePopUpN">
+		UPDATE
+		    notice_board
+		SET 
+			notice_popup = 'N'
+		where 1=1 
+		and notice_popup = 'Y'
+		and SYSDATE 
+            NOT BETWEEN notice_startdate AND notice_enddate + 1
+        and SYSDATE-1 > NOTICE_STARTDATE
+	</update>
+
+	<!-- main화면 리스트 조회 -->
+	<select id="selectMainNoticeBoardList" resultType="noticeBoard">
+		  SELECT
+		    notice_no
+		   ,notice_title
+		   ,notice_regdate
+		 FROM (select * from notice_board order by notice_regdate desc)
+         <![CDATA[where rownum <= 4]]>
+	</select>
+	
+	<!-- 상단고정 리스트 조회 -->
+	<select id="selectImportantNoticeBoardList" resultType="noticeBoard">
+		  SELECT
+		    a.notice_no
+		   ,a.admin_id
+           ,c.emp_name
+		   ,a.notice_title
+		   ,a.notice_content
+		   ,a.notice_regdate
+		   ,a.notice_viewcnt
+		   ,a.notice_startdate
+		   ,a.notice_enddate
+		   ,a.notice_updatedate
+		   ,a.notice_popup
+		   ,a.notice_important
+		FROM notice_board a 
+        inner join admin b 
+            on(a.admin_id = b.admin_id)
+        inner join employee c 
+            on(B.EMP_NO= C.EMP_NO)
+		where notice_no is not null and is_del='N' and notice_important='Y'
+		<include refid="search" />
+		 order by notice_regdate desc
+	</select>
+	
+	<!-- 리스트 조회 -->
+	<select id="selectNoticeBoardList" resultType="noticeBoard">
+		 SELECT
+		    a.notice_no
+		   ,a.admin_id
+           ,c.emp_name
+		   ,a.notice_title
+		   ,a.notice_content
+		   ,a.notice_regdate
+		   ,a.notice_viewcnt
+		   ,a.notice_startdate
+		   ,a.notice_enddate
+		   ,a.notice_updatedate
+		   ,a.notice_popup
+		   ,a.notice_important
+		FROM notice_board a 
+        inner join admin b 
+            on(a.admin_id = b.admin_id)
+        inner join employee c 
+            on(B.EMP_NO= C.EMP_NO)
+		where notice_no is not null and is_del='N' and notice_important='N'
+		<include refid="search" />
+		 order by notice_regdate desc
+	</select>
+	
+	<!-- 번호기준 조회 -->
+	<select id="selectNoticeBoardByNoticeNo" parameterType="int" resultType="noticeBoard">
+		select
+		    notice_no
+		   ,admin_id
+		   ,notice_title
+		   ,notice_content
+		   ,notice_regdate
+		   ,notice_viewcnt
+		   ,notice_startdate
+		   ,notice_enddate
+		   ,notice_updatedate
+		   ,notice_popup
+		   ,notice_important
+		   ,is_del
+		from notice_board 
+		where notice_no=#{noticeNo}
+	</select>
+	
+	<!-- 사번으로 관리자id 검색 -->
+	<select id="selectSearchAdminId" resultType="String">
+		select admin_id
+		from admin
+		where emp_no = #{empNo}
+	</select>
+
+	<!-- 등록-->
+	<update id="insertNoticeBoard" parameterType="noticeboard">
+		INSERT INTO notice_board (
+		    notice_no
+		   ,admin_id
+		   ,notice_title
+		   ,notice_content
+		   ,notice_startdate
+		   ,notice_enddate
+		   ,notice_popup
+		   ,notice_important
+		) VALUES (
+		    #{noticeNo}
+		    ,#{adminId}
+		    ,#{noticeTitle}
+		    ,#{noticeContent, jdbcType=VARCHAR}
+		    ,#{noticeStartdate, jdbcType=DATE}
+		    ,#{noticeEnddate, jdbcType=DATE}
+		    ,#{noticePopup, jdbcType=VARCHAR}
+		    ,#{noticeImportant, jdbcType=VARCHAR}
+		)
+	</update>
+	
+
+	<!-- 수정-->
+	<update id="updateNoticeBoard">
+		UPDATE notice_board
+		SET notice_title = #{noticeTitle}
+		    , notice_content = #{noticeContent}
+		    , notice_startdate = #{noticeStartdate , jdbcType=DATE}
+		    , notice_enddate = #{noticeEnddate, jdbcType=DATE}
+		    , notice_updatedate = sysdate
+		    , notice_popup = #{noticePopup, jdbcType=VARCHAR}
+		    , notice_important = #{noticeImportant, jdbcType=VARCHAR}
+		WHERE 
+		notice_no = #{noticeNo}
+		     
+	</update>
+
+	<!-- 삭제-->
+	<update id="deleteNoticeBoard">
+		delete from notice_board
+		where notice_no=#{noticeNo}
+	</update>
+
+</mapper>
+
+
+
+
+
+
+
+

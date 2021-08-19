@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Position-Mapper">
+	
+
+	<update id="updatePositionY">
+		UPDATE position
+    SET
+        is_use = 'Y'
+		WHERE
+    ps_code = #{psCode}
+	</update>
+	
+	<update id="updatePositionN">
+		UPDATE position
+    SET
+        is_use = 'N'
+		WHERE
+    ps_code = #{psCode}
+	</update>
+	
+	<select id="selectPositionList" resultType="position">
+		SELECT
+	    ps_code
+	   ,ps_name
+	   ,is_use
+	   ,ps_level
+		FROM position
+	</select>
+	
+	<select id="selectPositionListY" resultType="position">
+		SELECT
+	    ps_code
+	   ,ps_name
+	   ,is_use
+	   ,ps_level
+		FROM position 
+		WHERE is_use = 'Y'
+	</select>
+	
+	<select id="selectPositionHighPosition" resultType="position">
+		SELECT
+			ps_code
+		   ,ps_name
+		   ,is_use
+		   ,ps_level
+		FROM position 
+		WHERE is_use = 'Y' 
+		AND PS_LEVEL &lt; #{psLevel}
+		ORDER BY PS_LEVEL DESC
+	</select>
+</mapper>

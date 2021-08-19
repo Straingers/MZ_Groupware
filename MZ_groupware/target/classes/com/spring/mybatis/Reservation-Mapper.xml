@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Reservation-Mapper">
+
+<!-- 	 다음 시퀀스 가져오기  -->
+	<select id="selectReservationSequenceNextValue" resultType="int">
+		select seq_reservation.nextval
+		from dual
+	</select>
+	
+	<!-- main화면 리스트 조회 -->
+	<select id="selectMainReservationList1" parameterType="reservation" resultType="reservation">
+		SELECT
+		    a.res_no
+		   ,a.room_no
+		   ,a.emp_no
+		   ,b.emp_name
+		   ,a.res_date
+           ,c.dept_name
+           ,SUBSTR(to_char(res_start_date,'YYYY-MM-DD HH24:Mi:SS'),12,5) as resStartdate
+           ,SUBSTR(to_char(res_end_date,'YYYY-MM-DD HH24:Mi:SS'),12,5) as resEnddate
+		FROM 
+			 reservation a inner join employee b on(a.emp_no = b.emp_no) inner join DEPARTMENT c on(b.dept_code = c.dept_code)
+		where 1=1
+        and res_date >= SYSDATE-1
+		and res_date <![CDATA[ <= ]]> SYSDATE
+		and a.res_start_date > SYSDATE
+		and a.room_no = 100
+        order by a.res_start_date asc
+	</select>
+
+	<!-- main화면 리스트 조회 -->
+	<select id="selectMainReservationList2" parameterType="reservation" resultType="reservation">
+		SELECT
+		    a.res_no
+		   ,a.room_no
+		   ,a.emp_no
+		   ,b.emp_name
+		   ,a.res_date
+           ,c.dept_name
+           ,SUBSTR(to_char(res_start_date,'YYYY-MM-DD HH24:Mi:SS'),12,5) as resStartdate
+           ,SUBSTR(to_char(res_end_date,'YYYY-MM-DD HH24:Mi:SS'),12,5) as resEnddate
+		FROM 
+			 reservation a inner join employee b on(a.emp_no = b.emp_no) inner join DEPARTMENT c on(b.dept_code = c.dept_code)
+		where 1=1
+        and res_date >= SYSDATE-1
+		and res_date <![CDATA[ <= ]]> SYSDATE
+		and a.res_start_date > SYSDATE
+		and a.room_no = 200
+        order by a.res_start_date asc
+	</select>
+	
+	<!-- 리스트 조회 -->
+	<select id="selectReservationList" parameterType="reservation" resultType="reservation">
+		SELECT
+		    a.res_no
+		   ,a.room_no
+		   ,a.emp_no
+		   ,b.emp_name
+		   ,a.res_date
+           ,c.dept_name
+           ,SUBSTR(to_char(res_start_date,'YYYY-MM-DD HH24:Mi:SS'),12,5) as resStartdate
+           ,SUBSTR(to_char(res_end_date,'YYYY-MM-DD HH24:Mi:SS'),12,5) as resEnddate
+		   ,a.res_note
+		FROM reservation a 
+        inner join employee b 
+            on(a.emp_no = b.emp_no)
+        inner join DEPARTMENT c 
+            on(b.dept_code = c.dept_code)
+		where
+			room_no = #{roomNo}
+			and res_date = #{resDate}
+        order by resStartdate asc
+	</select>
+	
+
+<!--  	등록  -->
+	<update id="registReservation" >
+		INSERT INTO reservation (
+            res_no
+           ,room_no
+           ,emp_no
+           ,res_date
+           ,res_start_date
+           ,res_end_date
+		) VALUES (
+		    #{resNo}
+		    ,#{roomNo}
+		    ,#{empNo}
+		    ,#{resDate}
+		    ,to_date(#{resStartdate},'yyyy/MM/dd HH24:mi:ss')
+		    ,to_date(#{resEnddate},'yyyy/MM/dd HH24:mi:ss')
+		)
+	</update>
+	
+
+ <!--  	삭제  -->
+	<update id="deleteReservation">
+		delete from reservation
+		where 1=1
+		and to_char(res_date, 'yyyy-mm-dd hh24:mi:ss') = #{resDate}
+		and EMP_NO = #{empNo}
+		and SUBSTR(to_char(res_start_date, 'YYYY-MM-DD HH24:Mi:SS'),12,5) = #{resStartdate}
+		and room_no = #{roomNo}
+	</update>
+
+</mapper>
+
+
+
+
+
+
+
+

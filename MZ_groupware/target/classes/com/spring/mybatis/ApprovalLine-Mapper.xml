@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ApprovalLine-Mapper">
+
+	<select id="selectLineList" resultType="approvalLine">
+		SELECT 
+			LINE_ID
+		  , LINE_NAME
+		  , EMP_NO 
+		FROM 
+			APPROVAL_LINE_PERSONAL
+		WHERE IS_DEL = 'N' AND EMP_NO = #{empNo}
+	</select>
+
+	<select id="selectLine" resultType="approvalLine">
+		SELECT 
+			A.LINE_ID
+		  , A.LINE_NAME
+		  , A.EMP_NO
+		  ,	B.LINE_FIRST AS LINEFIRSTEMP
+          , (SELECT C.EMP_NAME FROM VIEW_EMP C WHERE B.LINE_FIRST = C.EMP_NO) LINEFIRST
+          , (SELECT C.DEPT_NAME FROM VIEW_EMP C WHERE B.LINE_FIRST = C.EMP_NO) LINEFIRSTDEPT
+          , (SELECT C.PS_NAME FROM VIEW_EMP C WHERE B.LINE_FIRST = C.EMP_NO) LINEFIRSTPS
+          ,	B.LINE_SECOND AS LINESECONDEMP
+          , (SELECT C.EMP_NAME FROM VIEW_EMP C WHERE B.LINE_SECOND = C.EMP_NO) LINESECOND
+          , (SELECT C.DEPT_NAME FROM VIEW_EMP C WHERE B.LINE_SECOND = C.EMP_NO) LINESECONDDEPT
+          , (SELECT C.PS_NAME FROM VIEW_EMP C WHERE B.LINE_SECOND = C.EMP_NO) LINESECONDPS 
+          ,	B.LINE_FINAL AS LINEFINALEMP
+          , (SELECT C.EMP_NAME FROM VIEW_EMP C WHERE B.LINE_FINAL = C.EMP_NO) LINEFINAL
+          , (SELECT C.DEPT_NAME FROM VIEW_EMP C WHERE B.LINE_FINAL = C.EMP_NO) LINEFINALDEPT
+          , (SELECT C.PS_NAME FROM VIEW_EMP C WHERE B.LINE_FINAL = C.EMP_NO) LINEFINALPS  
+		FROM 
+			APPROVAL_LINE_PERSONAL A INNER JOIN APPROVAL_LINE_PERSONAL_DETAIL B
+			ON (A.LINE_ID = B.LINE_ID)
+		WHERE
+			A.LINE_ID = #{lineId}
+	</select>
+	
+	<insert id="insertLine">
+		INSERT INTO APPROVAL_LINE_PERSONAL (
+			LINE_ID
+		  , LINE_NAME
+		  , EMP_NO
+		  , IS_DEL
+		) VALUES (
+			#{lineId}
+		  , #{lineName}
+		  , #{empNo}
+		  , 'N'
+		)
+		<selectKey keyProperty="lineId" resultType="int" order="BEFORE">
+			SELECT SEQ_APPROVAL_LINE.NEXTVAL FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<update id="updateLine">
+		UPDATE APPROVAL_LINE_PERSONAL
+		SET
+			LINE_NAME = #{lineName}
+		WHERE
+			LINE_ID = #{lineId}
+	</update>
+	
+	<delete id="deleteLine">
+		UPDATE APPROVAL_LINE_PERSONAL
+		SET
+			IS_DEL = 'Y'
+		WHERE
+			LINE_ID = #{lineId}
+	</delete>
+</mapper>

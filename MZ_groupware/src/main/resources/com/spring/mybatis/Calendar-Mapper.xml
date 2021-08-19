@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Calendar-Mapper">
+
+	<select id="selectCalendarSeqNextValue" resultType="int">
+		select
+		seq_calendar.nextval
+		from dual
+	</select>
+
+	<select id="selectMainCalendarList" resultType="calendar">
+		SELECT
+			a.cal_no as calNo
+		    ,a.emp_no as empNo
+		    ,a.type_code as typeCode
+		    ,a.cal_name as calName
+		    ,a.cal_content as calContent
+		    ,a.cal_location as calLocation
+		    ,a.cal_start as calStart
+		    ,a.cal_end as calEnd
+		    ,a.cal_status as calStatus
+		    ,a.cal_allday as calAllday
+			, b.type_color as mainTypeColor
+			, b.type_name as typeName
+			FROM calendar a inner join calendar_type b on(a.type_code = b.type_code)
+			where B.TYPE_FOLDER = '1'
+				and (TO_DATE(#{mainCalStart}, 'YY-MM-DD') 
+			    BETWEEN TO_DATE(a.cal_start, 'YY-MM-DD') 
+			    AND TO_DATE(a.cal_end, 'YY-MM-DD'))
+			
+			union all
+			SELECT
+			a.cal_no as calNo
+		    ,a.emp_no as empNo
+		    ,a.type_code as typeCode
+		    ,a.cal_name as calName
+		    ,a.cal_content as calContent
+		    ,a.cal_location as calLocation
+		    ,a.cal_start as calStart
+		    ,a.cal_end as calEnd
+		    ,a.cal_status as calStatus
+		    ,a.cal_allday as calAllday
+			, b.type_color as mainTypeColor
+			, b.type_name as typeName
+			FROM calendar a inner join calendar_type b on(a.type_code = b.type_code)
+			where B.TYPE_FOLDER = '2'
+			and a.emp_no = #{empNo}
+			and (TO_DATE(#{mainCalStart}, 'YY-MM-DD') 
+			    BETWEEN TO_DATE(a.cal_start, 'YY-MM-DD') 
+			    AND TO_DATE(a.cal_end, 'YY-MM-DD'))
+			
+	</select>
+	
+	<select id="selectCalendarList" resultType="calendar">
+		SELECT
+			a.cal_no as calNo
+		    ,a.emp_no as empNo
+		    ,a.type_code as typeCode
+		    ,a.cal_name as calName
+		    ,a.cal_content as calContent
+		    ,a.cal_location as calLocation
+		    ,a.cal_start as calStart
+		    ,a.cal_end as calEnd
+		    ,a.cal_status as calStatus
+		    ,a.cal_allday as calAllday
+			, b.type_color as typeColor
+			FROM calendar a inner join calendar_type b on(a.type_code = b.type_code)
+			where B.TYPE_FOLDER = '1'
+			union all
+			SELECT
+			a.cal_no as calNo
+		    ,a.emp_no as empNo
+		    ,a.type_code as typeCode
+		    ,a.cal_name as calName
+		    ,a.cal_content as calContent
+		    ,a.cal_location as calLocation
+		    ,a.cal_start as calStart
+		    ,a.cal_end as calEnd
+		    ,a.cal_status as calStatus
+		    ,a.cal_allday as calAllday
+			, b.type_color as typeColor
+			FROM calendar a inner join calendar_type b on(a.type_code = b.type_code)
+			where B.TYPE_FOLDER = '2'
+			and a.emp_no = #{empNo}
+	</select>
+
+
+	<select id="selectDeptCode" resultType="String">
+			SELECT substr(b.dept_code,1,1) || '00'
+			FROM employee a inner join department b on(a.dept_code = b.dept_code)
+			where a.emp_no = #{empNo} 
+	</select>
+
+
+	<update id="insertCalendar">
+		insert into calendar(cal_no, emp_no, type_code, cal_name, cal_content, cal_location, cal_start, cal_end, cal_status,
+		cal_allDay)
+		values(#{calNo}, #{empNo}, #{typeCode}, #{calName},#{calContent},#{calLocation},#{calStart},#{calEnd},#{calStatus},#{calAllDay})
+	</update>
+	
+
+	<update id="updateCalendar">
+		update calendar
+		set
+		type_code=#{typeCode},
+		cal_name=#{calName},
+		cal_content=#{calContent},
+		cal_location=#{calLocation},
+		cal_start= #{calStart},
+		cal_end= #{calEnd},
+		cal_status=#{calStatus},
+		cal_allDay=#{calAllDay}
+		where cal_no=#{calNo}
+	</update>
+
+	<update id="updateCalendarDate">
+		update calendar
+		set
+		cal_start= #{calStart},
+		cal_end= #{calEnd}
+		where cal_no=#{calNo}
+	</update>
+
+	<update id="deleteCalendar">
+		delete from calendar
+		where cal_no=#{calNo}
+	</update>
+
+</mapper>
+
+
+
+
+
+
+
+

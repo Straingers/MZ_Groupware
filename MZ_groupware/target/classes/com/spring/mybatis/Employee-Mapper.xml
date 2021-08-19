@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Employee-Mapper">
+	<!-- 직원 검색 기능. -->
+	<sql id="searchEmployeeAll">
+		<if test="searchType == 'all'.toString()">
+			and 1=1
+		</if>
+		<if test="searchType == 'empName'.toString()">
+			and emp_name like '%' || #{keyword} || '%'
+		</if>
+		<if test="searchType == 'empNo'.toString()">
+			and emp_no like '%' || #{keyword} || '%'
+		</if>
+		<if test="searchType == 'deptName'.toString()">
+			and dept_name like '%' || #{keyword} || '%'
+		</if>
+		<if test="searchType == 'psName'.toString()">
+			and ps_name like '%' || #{keyword} || '%'
+		</if>
+		<if test="searchType == 'empStatus'.toString()">
+			and emp_status like '%' || #{keyword} || '%'
+		</if>
+	</sql>
+	
+	<!-- 전직원 목록 조회 + 검색, 페이징 기능 추가 -->
+	<select id="selectEmployeeSearchCriteria" resultType="emp">
+		SELECT 
+			A.EMP_NO
+		   ,A.EMP_NAME
+		   ,A.EMP_PWD
+		   ,A.EMP_EMAIL
+		   ,A.EMP_REGNO
+		   ,A.EMP_HP
+		   ,A.EMP_TEL
+		   ,A.EMP_PHOTO
+		   ,TO_CHAR(A.EMP_CREATE_DATE, 'YYYY-MM-DD') AS STR_EMP_CREATE_DATE
+		   ,TO_CHAR(A.EMP_RESIGN_DATE, 'YYYY-MM-DD') AS STR_EMP_RESIGN_DATE
+		   ,A.EMP_CREATE_DATE
+		   ,A.EMP_RESIGN_DATE
+		   ,A.APP_PWD
+		   ,A.EMP_ZIPCODE
+		   ,A.EMP_ADDR1
+		   ,A.EMP_ADDR2
+		   ,A.DEPT_CODE
+		   ,A.PS_CODE
+		   ,A.EMP_STATUS
+		   ,A.AUTHORITY
+		   ,A.QR_CODE
+		   ,A.EMP_VAC
+		
+		   ,B.DEPT_NAME
+		   ,C.PS_NAME
+		   ,C.PS_LEVEL
+		FROM   EMPLOYEE A INNER JOIN DEPARTMENT B ON A.DEPT_CODE = B.DEPT_CODE
+			   INNER JOIN POSITION C ON A.PS_CODE = C.PS_CODE
+		WHERE EMP_NO is not null
+		<include refid="searchEmployeeAll" />
+		ORDER BY C.PS_LEVEL ASC, B.DEPT_NAME ASC, A.EMP_NAME DESC
+	</select>
+	
+	<!-- 직원 목록 내 직원 수 조회  -->
+	<select id="selectSearchEmployeeListCount" resultType="int">
+		select
+		count(*)
+		from employee A INNER JOIN DEPARTMENT B ON A.dept_code = B.dept_code
+										INNER JOIN POSITION C   ON A.ps_code   = C.ps_code
+		where EMP_NO is not null
+		<include refid="searchEmployeeAll" />
+		ORDER BY EMP_CREATE_DATE DESC
+	</select>
+
+	<select id="selectEmployeeByEmpNo" parameterType="str" resultType="emp">
+		SELECT A.*, B.DEPT_NAME, C.PS_NAME, C.PS_LEVEL
+			,TO_CHAR(A.EMP_CREATE_DATE, 'YYYY-MM-DD') AS STR_EMP_CREATE_DATE
+		    ,TO_CHAR(A.EMP_RESIGN_DATE, 'YYYY-MM-DD') AS STR_EMP_RESIGN_DATE
+		FROM   EMPLOYEE A INNER JOIN DEPARTMENT B ON A.DEPT_CODE = B.DEPT_CODE
+			   INNER JOIN POSITION C ON A.PS_CODE = C.PS_CODE
+		WHERE  A.EMP_NO = #{empNo}
+	</select>
+	
+	<select id="selectEmployeeByQrCode" parameterType="str" resultType="emp">
+		SELECT A.*, B.DEPT_NAME, C.PS_NAME
+		FROM   EMPLOYEE A INNER JOIN DEPARTMENT B ON A.DEPT_CODE = B.DEPT_CODE
+			   INNER JOIN POSITION C ON A.PS_CODE = C.PS_CODE
+		WHERE  A.QR_CODE = #{qrCode}	
+	</select>
+	
+	<select id="selectEmployeeList" resultType="emp">
+		SELECT 
+			A.*
+			, B.DEPT_NAME
+			, C.PS_NAME 
+			,TO_CHAR(A.EMP_CREATE_DATE, 'YYYY-MM-DD') AS STR_EMP_CREATE_DATE
+			,TO_CHAR(A.EMP_RESIGN_DATE, 'YYYY-MM-DD') AS STR_EMP_RESIGN_DATE
+		FROM   EMPLOYEE A INNER JOIN DEPARTMENT B ON A.DEPT_CODE = B.DEPT_CODE
+			   INNER JOIN POSITION C ON A.PS_CODE = C.PS_CODE
+	</select>
+	
+	<!-- 부서명 기준 기준 직원 목록 출력 ==> 부서 tree에서 사용 -->
+	<select id="selectEmployeeByDeptName" resultType="emp">
+		SELECT  A.EMP_NO
+	   ,A.EMP_NAME
+	   ,A.EMP_TEL
+	   ,A.EMP_PHOTO
+	   ,TO_CHAR(A.EMP_CREATE_DATE, 'YYYY-MM-DD') AS STR_EMP_CREATE_DATE
+	   ,TO_CHAR(A.EMP_RESIGN_DATE, 'YYYY-MM-DD') AS STR_EMP_RESIGN_DATE
+	   ,A.EMP_CREATE_DATE
+	   ,A.EMP_RESIGN_DATE
+	   ,A.DEPT_CODE
+	   ,A.PS_CODE
+	   ,A.EMP_STATUS
+	   ,A.AUTHORITY
+	   ,A.EMP_VAC
+		 , B.DEPT_NAME, C.PS_NAME
+		FROM   EMPLOYEE A   INNER JOIN DEPARTMENT B ON A.DEPT_CODE 	= B.DEPT_CODE
+		                    INNER JOIN POSITION		C ON A.PS_CODE 		= C.PS_CODE
+		WHERE  B.DEPT_NAME = #{deptName}
+		ORDER BY C.PS_LEVEL ASC, B.DEPT_NAME ASC, A.EMP_NAME ASC
+	</select>
+	
+	<!-- 직위 부장 이상 직원 표시 -->
+	<select id="selectEmployeeByPsCode" resultType="emp">
+		SELECT  A.EMP_NO
+	   	, A.EMP_NAME
+	   	, B.DEPT_CODE
+			, B.DEPT_NAME
+			, C.PS_CODE
+			, C.PS_NAME
+		FROM   EMPLOYEE A   INNER JOIN DEPARTMENT B ON A.DEPT_CODE 	= B.DEPT_CODE
+		                    INNER JOIN POSITION		C ON A.PS_CODE 		= C.PS_CODE
+		WHERE  C.PS_CODE &lt; 4
+	</select>
+	
+	<!-- 부서 코드 기준 직원 목록 조회. -->
+	<select id="cntEmployeeByDeptCode" resultType="emp">
+		SELECT A.EMP_NO
+	   ,A.EMP_NAME
+	   ,A.EMP_PWD
+	   ,A.EMP_EMAIL
+	   ,A.EMP_REGNO
+	   ,A.EMP_HP
+	   ,A.EMP_TEL
+	   ,A.EMP_PHOTO
+	   ,TO_CHAR(A.EMP_CREATE_DATE, 'YYYY-MM-DD') AS STR_EMP_CREATE_DATE
+	   ,TO_CHAR(A.EMP_RESIGN_DATE, 'YYYY-MM-DD') AS STR_EMP_RESIGN_DATE
+	   ,A.EMP_CREATE_DATE
+	   ,A.EMP_RESIGN_DATE
+	   ,A.APP_PWD
+	   ,A.EMP_ZIPCODE
+	   ,A.EMP_ADDR1
+	   ,A.EMP_ADDR2
+	   ,A.DEPT_CODE
+	   ,A.PS_CODE
+	   ,A.EMP_STATUS
+	   ,A.AUTHORITY
+	   ,A.QR_CODE
+	   ,A.EMP_VAC
+	   ,B.DEPT_SUPER
+		FROM
+		  Employee A INNER JOIN DEPARTMENT B ON A.DEPT_CODE = B.DEPT_CODE
+		WHERE A.DEPT_CODE = #{deptCode}
+	</select>
+	
+	<!-- 직원 상위부서로 이동 -->
+	<update id="updateDeptSuperByDeptCode">
+		UPDATE employee
+		SET
+		  dept_code = #{deptSuper}
+		WHERE
+		  dept_code = #{deptCode} 
+  </update>
+  
+  <!-- 직위 코드로 직원 정보 조회-->
+  <select id="selectEmployeeAllByPsCode" resultType="emp">
+  	SELECT
+	    A.emp_no
+	   ,A.emp_name
+	   ,A.emp_pwd
+	   ,A.emp_email
+	   ,A.emp_regno
+	   ,A.emp_hp
+	   ,A.emp_tel
+	   ,A.emp_photo
+	   ,A.emp_create_date
+	   ,A.emp_resign_date
+	   ,A.app_pwd
+	   ,A.emp_zipcode
+	   ,A.emp_addr1
+	   ,A.emp_addr2
+	   ,A.dept_code
+	   ,A.ps_code
+	   ,A.emp_status
+	   ,A.authority
+	   ,A.qr_code
+	   ,A.emp_vac
+	   ,B.dept_name
+		FROM employee A INNER JOIN DEPARTMENT B ON A.DEPT_CODE = B.DEPT_CODE
+		WHERE ps_code = #{psCode}
+  </select>
+  
+  <update id="updateEmpVac">
+		UPDATE employee
+		SET
+		    emp_vac = emp_vac + #{empVac}
+		WHERE
+		    trunc(((sysdate - emp_create_date) + 1) / 365) = #{appPwd}
+  </update>
+  
+  <update id="minusEmpVac">
+  		UPDATE employee
+  		SET emp_vac = emp_vac - #{empVac}
+  		WHERE emp_no = #{empNo}
+  </update>
+  
+  <select id="selectEmployeeSequenceNextValue" resultType="int">
+  	select SEQ_EMPLOYEE.nextval
+  	from dual
+  </select>
+  
+  <update id="insertEmployee">
+	  INSERT INTO employee (
+		    emp_no
+		   ,emp_name
+		   ,emp_email
+		   ,emp_regno
+		   ,emp_hp
+		   ,emp_tel
+		   ,emp_photo
+		   ,emp_resign_date
+		   ,emp_zipcode
+		   ,emp_addr1
+		   ,emp_addr2
+		   ,dept_code
+		   ,ps_code
+		   ,qr_code
+		) VALUES (
+		    #{empNo}
+		   ,#{empName}
+		   ,#{empEmail,jdbcType=VARCHAR}
+		   ,#{empRegno,jdbcType=VARCHAR}
+		   ,#{empHp,jdbcType=VARCHAR}
+		   ,#{empTel,jdbcType=VARCHAR}
+		   ,#{empPhoto,jdbcType=VARCHAR}
+		   ,#{empResignDate,jdbcType=DATE}
+		   ,#{empZipcode}
+		   ,#{empAddr1}
+		   ,#{empAddr2}
+		   ,#{deptCode}
+		   ,#{psCode}
+		   ,#{qrCode,jdbcType=VARCHAR}
+		)
+	</update>
+	
+	<update id="modifyEmployee">
+		UPDATE employee
+    SET
+        emp_photo = #{empPhoto}
+        ,emp_tel = #{empTel}
+        ,qr_code = #{qrCode}
+		WHERE
+    	emp_no = #{empNo}
+	</update>
+	
+	<update id="deleteEmployee">
+		DELETE FROM employee
+		WHERE
+   		emp_no = #{empNo}
+	</update>
+	
+	
+	<update id="myInfoUpdateEmployee">
+		UPDATE employee
+	    SET
+	        emp_email = #{empEmail}
+	      , emp_hp = #{empHp}
+	      , emp_zipcode = #{empZipcode}
+	      , emp_addr1 = #{empAddr1}
+	      , emp_addr2 = #{empAddr2}  
+		WHERE
+		    emp_no = #{empNo}
+	</update>
+	
+	<update id="myPwdUpdate">
+		UPDATE employee
+	    SET
+	        emp_pwd= #{empPwd}
+		WHERE
+		    emp_no = #{empNo}
+	</update>
+	
+	<update id="appPwdUpdate">
+		UPDATE employee
+	    SET
+	        app_pwd= #{appPwd}
+		WHERE
+		    emp_no = #{empNo}
+	</update>
+	
+	<update id="updateEmployeePsCodeByEmpNo">
+		UPDATE employee
+    	SET
+        	ps_code = #{psCode}
+		WHERE
+    		emp_no = #{empNo}
+	</update>
+	
+	<update id="updateEmployeePsCodeDeptCodeByEmpNo">
+		UPDATE employee
+    	SET
+        	ps_code = #{psCode}
+        	,dept_code = #{deptCode}
+		WHERE
+    		emp_no = #{empNo}
+	</update>
+	
+	<!-- 인사 처리 시 직원 상태정보 변경 -->
+	<update id="updateEmployeeEmpStatusByEmpNo">
+		UPDATE employee
+    	SET
+        	emp_status = #{empStatus}
+		WHERE
+    		emp_no = #{empNo}
+	</update>
+	
+	<!-- 부서장 설정 시 직원 권한 변경 -->
+	<update id="updateEmployeeAuthorityByEmpNo">
+		UPDATE employee
+    	SET
+        	authority = #{authority}
+		WHERE
+    		emp_no = #{empNo}
+	</update>
+	
+	<!-- 부서 삭제 시 직원 권한 변경 -->
+	<update id="updateEmployeeAuthorityByDeptCode">
+		update employee
+		set authority = #{authority}
+		where 
+			emp_no = (
+				select emp_no 
+				from employee 
+				where emp_no = (
+					select dept_super_no 
+					from department 
+					where dept_code = #{deptCode}
+				)
+			)
+	</update>
+	
+	
+	
+	<!-- 조직도 -->
+	<!-- employee 대표이사 직원조회 -->
+	<select id="selectEmployeeCEO" resultType="emp">
+		select B.dept_code
+	    , B.dept_name 
+	    , A.emp_no
+	    , A.emp_name
+	    , A.emp_photo
+	    , A.emp_tel
+	    , C.ps_name
+		from employee A INNER JOIN department B ON A.emp_no  = B.dept_super_no
+										INNER JOIN position   C ON A.ps_code = C.ps_code
+		where B.dept_code = '000'
+	</select>
+	
+	<!-- 상위코드 000 기준 하위 부서 직원 조회 -->
+	<select id="selectEmployeeDepartment" resultType="emp">
+		select B.dept_code
+	    , B.dept_name 
+	    , A.emp_no
+	    , A.emp_name
+	    , A.emp_photo
+	    , A.emp_tel
+	    , C.ps_name
+		from employee A INNER JOIN department B ON A.emp_no  = B.dept_super_no
+										INNER JOIN position   C ON A.ps_code = C.ps_code
+		where B.dept_super = '000'
+		AND NOT(B.dept_code = '000')
+	</select>
+	
+	<!-- 넘어온 상위 부서코드 기준 하위 부서 직원 조회 -->
+	<select id="selectEmployeeTeamjang" resultType="emp">
+		select B.dept_code
+	    , B.dept_name 
+	    , A.emp_no
+	    , A.emp_name
+	    , A.emp_photo
+	    , A.emp_tel
+	    , C.ps_name
+		from employee A INNER JOIN department B ON A.emp_no  = B.dept_super_no
+										INNER JOIN position   C ON A.ps_code = C.ps_code
+		where B.dept_super = ${deptSuper} AND B.IS_USE = 'Y'
+	</select>
+	
+	<!-- 팀원 조회 -->
+	<select id="selectEmployeeTeam" resultType="emp">
+		select B.dept_code
+	    , B.dept_name 
+	    , A.emp_no
+	    , A.emp_name
+	    , A.emp_photo
+	    , A.emp_tel
+	    , C.ps_name
+		from employee A INNER JOIN department B ON A.dept_code = B.dept_code
+										INNER JOIN position   C ON A.ps_code = C.ps_code
+		where B.dept_code = ${deptCode}
+	</select>
+	
+	<select id="selectEmployeeFavorite" resultType="emp">
+		SELECT 
+			A.*
+			, B.DEPT_NAME
+			, C.PS_NAME 
+			,TO_CHAR(A.EMP_CREATE_DATE, 'YYYY-MM-DD') AS STR_EMP_CREATE_DATE
+			,TO_CHAR(A.EMP_RESIGN_DATE, 'YYYY-MM-DD') AS STR_EMP_RESIGN_DATE
+		FROM   EMPLOYEE A INNER JOIN DEPARTMENT B ON A.DEPT_CODE = B.DEPT_CODE
+			   INNER JOIN POSITION C ON A.PS_CODE = C.PS_CODE
+         INNER JOIN CONTACT_FAVORITE D ON A.EMP_NO = D.FAVORITE_EMP_NO
+    WHERE D.EMP_NO='${empNo}'
+	</select>
+	
+</mapper>

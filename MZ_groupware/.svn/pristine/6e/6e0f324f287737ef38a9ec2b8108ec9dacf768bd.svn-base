@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TaskReport-Mapper">
+	
+	<sql id="search">
+		<if test="searchType == 't'.toString()">
+			AND TASK_TITLE LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			AND EMP_NAME LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			AND TASK_CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			AND (TASK_TITLE LIKE '%'||#{keyword}||'%'
+			OR  TASK_CONTENT LIKE '%'||#{keyword}||'%')
+		</if>
+		<if test="searchType == 'tcw'.toString()">
+			AND (TASK_TITLE LIKE '%'||#{keyword}||'%'
+			OR  EMP_NAME LIKE '%'||#{keyword}||'%'
+			OR  TASK_CONTENT LIKE '%'||#{keyword}||'%')
+		</if>
+	</sql>
+	
+	<!-- 미확인목록 -->
+	<select id="selectUncheckTaskList" resultType="taskReport">
+		SELECT
+				A.TASK_NO
+			  , A.EMP_NO
+			  , C.EMP_NAME
+			  , C.DEPT_NAME
+			  , C.PS_NAME
+			  , A.TASK_DOC_ID
+			  , A.TASK_TYPE
+			  , A.TASK_TITLE
+			  , A.TASK_CONTENT
+			  , A.TASK_TEMP
+			  , A.TASK_DATE
+			  , A.TASK_SUBTYPE
+			  , B.TASK_RECEIVE_IMPORTANT
+			  , B.TASK_RECEIVER_TYPE
+		FROM  TASK_REPORT A
+			  LEFT JOIN TASK_HISTORY B ON A.TASK_NO = B.TASK_NO
+			  LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+		WHERE A.TASK_TYPE = #{taskType} AND B.TASK_RECEIVER = #{taskReceiver} AND B.TASK_SIGN = 'N'
+		<include refid="search" />
+		ORDER BY TASK_NO DESC
+	</select>
+	
+	<select id="selectUncheckTaskListCount" resultType="int">
+		SELECT COUNT(A.TASK_NO)
+		FROM   TASK_REPORT A
+			   LEFT JOIN TASK_HISTORY B ON A.TASK_NO = B.TASK_NO
+			   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+		WHERE  A.TASK_TYPE = #{taskType} AND B.TASK_RECEIVER = #{taskReceiver} AND B.TASK_SIGN = 'N'
+		<include refid="search" />
+	</select>
+		
+	<!-- 수신목록 -->	
+	<select id="selectReceiveTaskList" resultType="taskReport">
+		SELECT
+				A.TASK_NO
+			  , A.EMP_NO
+			  , C.EMP_NAME
+			  , C.DEPT_NAME
+			  , C.PS_NAME
+			  , A.TASK_DOC_ID
+			  , A.TASK_TYPE
+			  , A.TASK_TITLE
+			  , A.TASK_CONTENT
+			  , A.TASK_TEMP
+			  , A.TASK_DATE
+			  , A.TASK_SUBTYPE
+			  , B.TASK_RECEIVE_IMPORTANT
+			  , B.TASK_RECEIVER_TYPE
+		FROM  TASK_REPORT A
+			  LEFT JOIN TASK_HISTORY B ON A.TASK_NO = B.TASK_NO
+			  LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+		WHERE A.TASK_TYPE = #{taskType} AND B.TASK_RECEIVER = #{taskReceiver} AND B.TASK_SIGN = 'Y'
+		
+		<include refid="search" />
+		ORDER BY TASK_NO DESC
+	</select>
+	
+	<select id="selectReceiveTaskListCount" resultType="int">
+		SELECT COUNT(A.TASK_NO)
+		FROM   TASK_REPORT A
+			   LEFT JOIN TASK_HISTORY B ON A.TASK_NO = B.TASK_NO
+			   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+		WHERE  A.TASK_TYPE = #{taskType} AND B.TASK_RECEIVER = #{taskReceiver} AND B.TASK_SIGN = 'Y'
+		<include refid="search" />
+	</select>
+		
+	<!-- 발신목록 -->	
+	<select id="selectSendTaskList" resultType="taskReport">
+		SELECT
+				A.TASK_NO
+			  , A.EMP_NO
+			  , B.EMP_NAME
+			  , B.DEPT_NAME
+			  , B.PS_NAME
+			  , A.TASK_DOC_ID
+			  , A.TASK_TYPE
+			  , A.TASK_TITLE
+			  , A.TASK_CONTENT
+			  , A.TASK_TEMP
+			  , A.TASK_DATE
+			  , A.TASK_IMPORTANT
+			  , A.TASK_SUBTYPE
+			  , C.RECEIVER_COUNT
+              , D.RECEIVER_SIGN
+              , E.CC_COUNT
+		FROM  TASK_REPORT A
+			  LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+			  LEFT JOIN (SELECT TASK_NO, COUNT(TASK_RECEIVER) AS RECEIVER_COUNT FROM TASK_HISTORY WHERE TASK_RECEIVER_TYPE = 'rec' GROUP BY TASK_NO) C ON A.TASK_NO = C.TASK_NO
+              LEFT JOIN (SELECT TASK_NO, COUNT(TASK_RECEIVER) AS RECEIVER_SIGN FROM TASK_HISTORY WHERE TASK_SIGN = 'Y' GROUP BY TASK_NO) D ON A.TASK_NO = D.TASK_NO
+			  LEFT JOIN (SELECT TASK_NO, COUNT(TASK_RECEIVER) AS CC_COUNT FROM TASK_HISTORY WHERE TASK_RECEIVER_TYPE = 'cc' GROUP BY TASK_NO) E ON A.TASK_NO = E.TASK_NO
+		WHERE A.TASK_TYPE = #{taskType} AND A.EMP_NO = #{empNo} AND A.TASK_TEMP = 'N'
+		<include refid="search" />
+		ORDER BY TASK_NO DESC
+	</select>
+	
+	<select id="selectSendTaskListCount" resultType="int">
+		SELECT COUNT(A.TASK_NO)
+		FROM  TASK_REPORT A
+			  LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		WHERE A.TASK_TYPE = #{taskType} AND A.EMP_NO = #{empNo} AND A.TASK_TEMP = 'N'
+		<include refid="search" />
+	</select>
+
+	
+	<!-- 임시목록 -->	
+	<select id="selectTempTaskList" resultType="taskReport">
+		SELECT
+				A.TASK_NO
+			  , A.EMP_NO
+			  , B.EMP_NAME
+			  , B.DEPT_NAME
+			  , B.PS_NAME
+			  , A.TASK_DOC_ID
+			  , A.TASK_TYPE
+			  , A.TASK_TITLE
+			  , A.TASK_CONTENT
+			  , A.TASK_TEMP
+			  , A.TASK_DATE
+			  , A.TASK_IMPORTANT
+			  , A.TASK_SUBTYPE
+	    FROM  TASK_REPORT A
+			  LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		WHERE A.TASK_TYPE = #{taskType} AND A.EMP_NO = #{empNo} AND A.TASK_TEMP = 'Y' AND A.IS_DEL='N'
+		<include refid="search" />
+		ORDER BY TASK_NO DESC
+	</select>
+	
+	<select id="selectTempListCount" resultType="int">
+		SELECT COUNT(A.TASK_NO)
+		FROM   TASK_REPORT A
+			   LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		WHERE A.TASK_TYPE = #{taskType} AND A.EMP_NO = #{empNo} AND A.TASK_TEMP = 'Y' AND A.IS_DEL='N'
+		<include refid="search" />
+	</select>
+	
+	
+	<!-- 발신중요업무 -->
+	<update id="updateSendImportant">
+		UPDATE TASK_REPORT
+		SET
+			TASK_IMPORTANT = #{taskImportant}
+		WHERE
+			TASK_NO = #{taskNo}
+</update>
+	
+	<select id="selectSendImportantListCount" resultType="int">
+		SELECT COUNT(A.TASK_NO)
+		FROM TASK_REPORT A LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		WHERE A.TASK_IMPORTANT = 'Y' AND A.EMP_NO = #{empNo}
+		<include refid="search" />
+	</select>
+	
+	<select id="selectSendImportantList" resultType="taskReport">
+		SELECT
+		    A.TASK_NO
+		  , A.EMP_NO
+		  , A.TASK_DOC_ID
+		  , A.TASK_TYPE
+		  , A.TASK_TITLE
+		  , A.TASK_CONTENT
+		  , A.TASK_TEMP
+		  , A.TASK_DATE
+		  , A.TASK_IMPORTANT
+		  , A.TASK_SUBTYPE
+		  , B.EMP_NO
+		  , B.EMP_NAME
+		  , B.DEPT_NAME
+		  , B.PS_NAME
+		FROM
+		    TASK_REPORT A LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		WHERE A.TASK_IMPORTANT = 'Y' AND A.EMP_NO = #{empNo}
+		<include refid="search" />
+		ORDER BY A.TASK_NO DESC
+	</select>
+	
+	<!-- 수신중요업무 -->
+	<update id="updateReceiveImportant">
+		UPDATE TASK_HISTORY
+		SET
+			TASK_RECEIVE_IMPORTANT = #{taskReceiveImportant}
+		WHERE
+			TASK_NO = #{taskNo}  AND TASK_RECEIVER = #{taskReceiver}
+	</update>
+	
+	<select id="selectReceiverImportantListCount" resultType="int">
+		SELECT COUNT(A.TASK_NO)
+		FROM
+	  		TASK_REPORT A
+			LEFT JOIN TASK_HISTORY B ON A.TASK_NO = B.TASK_NO
+			LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+  		WHERE
+  			B.TASK_RECEIVE_IMPORTANT = 'Y' AND B.TASK_RECEIVER = #{taskReceiver}
+		<include refid="search" />
+	</select>
+	
+	<select id="selectReceiverImportantList" resultType="taskReport">
+		SELECT
+		    A.TASK_NO
+		  , A.EMP_NO
+		  , A.TASK_DOC_ID
+		  , A.TASK_TYPE
+		  , A.TASK_TITLE
+		  , A.TASK_CONTENT
+		  , A.TASK_TEMP
+		  , A.TASK_DATE
+		  , A.TASK_IMPORTANT
+		  , A.TASK_SUBTYPE
+		  , C.EMP_NO
+		  , C.EMP_NAME
+		  , C.DEPT_NAME
+		  , C.PS_NAME
+		  , B.TASK_RECEIVER
+		  , B.TASK_NO
+		  , B.TASK_SIGN
+		  , B.TASK_CONFIRM_DATE
+		  , B.TASK_RECEIVER_TYPE
+		  , B.TASK_RECEIVE_IMPORTANT
+	  	FROM
+	  		TASK_REPORT A
+			LEFT JOIN TASK_HISTORY B ON A.TASK_NO = B.TASK_NO
+			LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+  		WHERE
+  			B.TASK_RECEIVE_IMPORTANT = 'Y' AND B.TASK_RECEIVER = #{taskReceiver}
+	</select>
+
+	
+	<!-- 글조회 -->
+	<select id="selectTaskReport" resultType="taskReport">
+		SELECT
+		    A.TASK_NO
+		  , A.EMP_NO
+		  , A.TASK_DOC_ID
+		  , A.TASK_TYPE
+		  , A.TASK_TITLE
+		  , A.TASK_CONTENT
+		  , A.TASK_TEMP
+		  , A.TASK_DATE
+		  , A.TASK_IMPORTANT
+		  , A.TASK_SUBTYPE
+		  , B.EMP_NO
+		  , B.EMP_NAME
+		  , B.DEPT_NAME
+		  , B.PS_NAME
+		FROM
+		    TASK_REPORT A LEFT JOIN VIEW_EMP B ON A.EMP_NO = B.EMP_NO
+		WHERE
+			A.TASK_NO = #{taskNo}
+	</select>
+
+	<insert id="insertTaskReport">
+		INSERT INTO TASK_REPORT (
+		    TASK_NO
+		  , EMP_NO
+		  , TASK_DOC_ID
+		  , TASK_TYPE
+		  , TASK_TITLE
+		  , TASK_CONTENT
+		  , TASK_SUBTYPE
+		  , TASK_TEMP
+		) VALUES (
+		    #{taskNo}
+		  , #{empNo}
+		  , #{taskDocId, jdbcType=INTEGER}
+		  , #{taskType}
+		  , #{taskTitle}
+		  , #{taskContent}
+		  , #{taskSubtype, jdbcType=VARCHAR}
+		  , 'N'
+		)
+		<selectKey keyProperty="taskNo" resultType="int" order="BEFORE">
+			SELECT SEQ_TASK_REPORT.nextval FROM DUAL
+		</selectKey>
+	</insert>
+	
+	
+	
+	
+	<!-- 임시저장 -->
+	<insert id="insertTempTaskReport">
+		INSERT INTO TASK_REPORT (
+		    TASK_NO
+		  , EMP_NO
+		  , TASK_DOC_ID
+		  , TASK_TYPE
+		  , TASK_TITLE
+		  , TASK_CONTENT
+		  , TASK_SUBTYPE
+		  , TASK_TEMP
+		) VALUES (
+		    #{taskNo}
+		  , #{empNo}
+		  , #{taskDocId, jdbcType=INTEGER}
+		  , #{taskType}
+		  , #{taskTitle}
+		  , #{taskContent}
+		  , #{taskSubtype, jdbcType=VARCHAR}
+		  , 'Y'
+		)
+		<selectKey keyProperty="taskNo" resultType="int" order="BEFORE">
+			SELECT SEQ_TASK_REPORT.nextval FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<select id="selectTempTaskReport" resultType="taskReport">
+		SELECT
+			TASK_NO
+		  , EMP_NO
+		  , TASK_DOC_ID
+		  , TASK_TYPE
+		  , TASK_TITLE
+		  , TASK_CONTENT
+		  , TASK_TEMP
+		  , TASK_SUBTYPE
+		FROM
+			TASK_REPORT
+		WHERE
+			TASK_NO = #{taskNo}
+	</select>
+	
+	<update id="updateTempTaskReport">
+		UPDATE
+			TASK_REPORT
+		SET
+		   TASK_DOC_ID = #{taskDocId, jdbcType=INTEGER}  
+		  , TASK_TITLE = #{taskTitle}                    
+		  , TASK_CONTENT = #{taskContent}                  
+		  , TASK_SUBTYPE = #{taskSubtype, jdbcType=VARCHAR}
+		WHERE
+			TASK_NO = #{taskNo}
+	</update>
+	
+	<update id="deleteTempTaskReport">
+		UPDATE
+			TASK_REPORT
+		SET
+			IS_DEL = 'Y'
+		WHERE
+			TASK_NO = #{taskNo}
+	</update>
+	
+	
+	<select id="selectAllReceiveTask" resultType="taskReport">
+		SELECT
+				A.TASK_NO
+			  , A.EMP_NO
+			  , C.EMP_NAME
+			  , C.DEPT_NAME
+			  , C.PS_NAME
+			  , A.TASK_DOC_ID
+			  , A.TASK_TYPE
+			  , A.TASK_TITLE
+			  , A.TASK_CONTENT
+			  , A.TASK_TEMP
+			  , A.TASK_DATE
+			  , A.TASK_SUBTYPE
+			  , B.TASK_RECEIVE_IMPORTANT
+		FROM  TASK_REPORT A
+			  LEFT JOIN TASK_HISTORY B ON A.TASK_NO = B.TASK_NO
+			  LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+		WHERE B.TASK_RECEIVER = #{taskReceiver}
+		ORDER BY TASK_NO DESC
+	</select>
+	
+	<select id="selectUncheckShareCount" resultType="int">
+		SELECT COUNT(A.TASK_NO)
+		FROM   TASK_REPORT A
+			   LEFT JOIN TASK_HISTORY B ON A.TASK_NO = B.TASK_NO
+			   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+		WHERE  A.TASK_TYPE = 'share' AND B.TASK_RECEIVER = #{taskReceiver} AND B.TASK_SIGN = 'N'
+	</select>
+	
+	<select id="selectUncheckDailyCount" resultType="int">
+		SELECT COUNT(A.TASK_NO)
+		FROM   TASK_REPORT A
+			   LEFT JOIN TASK_HISTORY B ON A.TASK_NO = B.TASK_NO
+			   LEFT JOIN VIEW_EMP C ON A.EMP_NO = C.EMP_NO
+		WHERE  A.TASK_TYPE = 'daily' AND B.TASK_RECEIVER = #{taskReceiver} AND B.TASK_SIGN = 'N'
+	</select>
+	
+</mapper>

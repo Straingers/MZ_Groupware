@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OtBoard-Mapper">
+
+	<sql id="searchList">
+		<if test="searchType == 't'.toString()">
+			AND A.OT_TITLE LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			AND A.OT_CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			AND C.EMP_NAME LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			AND (
+			A.OT_TITLE LIKE '%'||#{keyword}||'%'
+			OR
+			A.OT_CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+	</sql>
+	<sql id="searchCount">
+		<if test="searchType == 't'.toString()">
+			AND OT_TITLE LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			AND OT_CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			AND EMP_NAME LIKE '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			AND (
+			OT_TITLE LIKE '%'||#{keyword}||'%'
+			OR
+			OT_CONTENT LIKE '%'||#{keyword}||'%'
+		</if>
+	</sql>
+	
+	<!-- 리스트 가져오기 -->
+	<select id="selectOtList" resultType="ot">
+		select A.OT_NO 			otNo
+			 , A.ADMIN_ID 			adminId
+			 , A.OT_TITLE 		otTitle
+			 , A.OT_CONTENT 	otContent
+			 , to_char(A.OT_REGDATE, 'YYYY-MM-DD') otRegdate
+			 , A.OT_VIEWCNT 	officeViewcnt
+			 , to_char(A.OT_UPDATEDATE, 'YY.MM.DD HH24:MI') otUpdatedate
+			 , A.IS_DEL 			isDel
+			 , C.EMP_NAME 			adminName
+			 , C.EMP_NO				adminEmpNo
+		from OT_BOARD A 
+            inner join ADMIN B on A.ADMIN_ID = B.ADMIN_ID 
+            inner join employee C on B.EMP_NO = C.EMP_NO
+		where 1=1
+		<include refid="searchList" />
+		and A.IS_DEL = 'N'
+        order by A.OT_NO desc
+	</select>
+	
+	<!-- 해당 게시글 가져오기(상세) -->
+	<select id="selectOtByOtNo" resultType="ot">
+		select A.OT_NO 			otNo
+			 , A.ADMIN_ID 			adminId
+			 , A.OT_TITLE 		otTitle
+			 , A.OT_CONTENT 	otContent
+			 , to_char(A.OT_REGDATE, 'YY.MM.DD HH24:MI') otRegdate
+			 , A.OT_VIEWCNT 	officeViewcnt
+			 , to_char(A.OT_UPDATEDATE, 'YY.MM.DD HH24:MI') otUpdatedate
+			 , A.IS_DEL 			isDel
+			 , C.EMP_NAME 			adminName
+		from OT_BOARD A 
+            inner join ADMIN B on A.ADMIN_ID = B.ADMIN_ID 
+            inner join employee C on B.EMP_NO = C.EMP_NO
+		where 1=1
+		and A.OT_NO = #{otNo}
+		and A.IS_DEL = 'N'
+	</select>
+	
+	<!-- admin에 있나 확인 -->
+	<select id="checkExistByEmpNo" resultType="int">
+		select count(*)
+		from ADMIN
+		where 1=1
+		and EMP_NO = #{empNo}
+	</select>
+	
+	<!-- admin에 있으면 vo 가져와 -->
+	<select id="getAdminByEmpNo" resultType="admin">
+		select *
+		from ADMIN
+		where 1=1
+		and EMP_NO = #{empNo}
+	</select>
+	
+	<!-- 리스트 cnt가져오기 -->
+	<select id="selectOtListCount" resultType="int">
+		select count(*)
+		from OT_BOARD
+		where 1=1
+		<include refid="searchCount" />
+		and IS_DEL = 'N'
+	</select>
+	
+	
+	<!-- 게시글 등록 -->
+	<update id="insertOtBoard">
+		insert into 
+        OT_BOARD(OT_NO, ADMIN_ID, OT_TITLE, OT_CONTENT)
+        values(#{otNo}, #{adminId}, #{otTitle}, #{otContent})
+        
+        <selectKey keyProperty="otNo" resultType="int" order="BEFORE">
+        	select seq_office_board.nextval
+			from dual
+        </selectKey>
+	</update>
+	
+	<!-- 게시글 수정 -->
+	<update id="updateOtBoard">
+		update OT_BOARD
+		set OT_TITLE = #{otTitle}
+		  , OT_CONTENT = #{otContent}
+		  , OT_UPDATEDATE = sysdate
+		where OT_NO = #{otNo}
+	</update>
+	
+	<!-- 게시글 삭제 -->
+	<update id="deleteOtBoard">
+		update OT_BOARD
+		set IS_DEL = 'Y'
+		where OT_NO = #{otNo}
+	</update>
+</mapper>

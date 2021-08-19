@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Holiday-Mapper">
+
+	<select id="selectHolidayList" resultType="holiday">
+		SELECT
+		    TO_CHAR(holiday_date, 'YYYY-MM-DD') as holidayDate
+		  , holiday_name
+		FROM
+	    	holiday
+	</select>
+
+	<select id="selectMainHolidayList" resultType="holiday">
+		SELECT
+		    TO_CHAR(holiday_date, 'YYYY-MM-DD') as holidayDate
+		  , holiday_name
+		FROM
+	    	holiday
+        WHERE 
+        	holiday_date = #{holidayDate}
+	</select>
+	
+	<select id="selectHolidayCount" resultType="int">
+		SELECT
+		    COUNT(*)
+		FROM
+		    holiday
+		WHERE 
+		    TO_CHAR(holiday_date, 'YYYY/MM/DD') = TO_DATE(#{holidayDate}, 'YYYY/MM/DD')
+	</select>
+	
+	<update id="insertHoliday" parameterType="holiday">
+		INSERT INTO holiday (
+		    holiday_date
+		  , holiday_name
+		) VALUES (
+		    TO_DATE(#{holidayDate}, 'YYYY-MM-DD')
+		  , #{holidayName}
+		)
+	</update>
+	
+	<update id="deleteHoliday" parameterType="holiday">
+		DELETE FROM holiday
+		WHERE
+		    TO_CHAR(holiday_date, 'YYYY/MM/DD') = TO_DATE(#{holidayDate}, 'YYYY/MM/DD')
+		    AND   holiday_name = #{holidayName}
+	</update>
+</mapper>

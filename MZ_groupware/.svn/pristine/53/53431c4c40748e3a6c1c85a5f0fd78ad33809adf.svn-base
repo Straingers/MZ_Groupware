@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+  <mapper namespace="ApprovalAttach-Mapper">
+  
+  <select id="selectAttachByAppNo" resultType="approvalAttach">
+		select *
+		from approval_attach
+		where app_no = #{appNo}
+	</select>
+	
+	<select id="selectAttachByAno" resultType="approvalAttach">
+		select *
+		from approval_attach
+		where attach_no = #{attachNo}	
+	</select>
+	
+	<update id="insertAttach">
+		insert into
+		approval_attach (attach_no, attach_uploadpath, attach_filename, attach_filetype, app_no, attach_attacher)
+		values (seq_approvalattach.nextval, #{attachUploadpath}, #{attachFilename}, #{attachFiletype}, #{appNo}, #{attachAttacher})
+	</update>
+	
+	<update id="deleteAttach">
+		delete 
+		from approval_attach
+		where attach_no = #{attachNo}
+	</update>
+	
+	<update id="deleteAllAttach">
+		delete 
+		from approval_attach
+		where app_no= #{appNo}
+	</update>
+  	
+  	
+  	
+  	<!-- 전자결재 첨부파일 로그 -->	
+	<select id="selectAllAppList" resultType="approvalAttach">
+		SELECT
+		    A.ATTACH_NO
+		  , B.APP_NO
+		  , B.APP_TITLE
+		  , SUBSTR(A.ATTACH_FILENAME, 35) FILE_NAME
+		  , A.ATTACH_ATTACHER
+		  , C.EMP_NAME
+		  , C.DEPT_NAME
+		  , C.PS_NAME
+		  , A.ATTACH_REGDATE
+		FROM
+		    APPROVAL_ATTACH A
+		    INNER JOIN APPROVAL B ON A.APP_NO = B.APP_NO
+		    INNER JOIN VIEW_EMP C ON A.ATTACH_ATTACHER = C.EMP_NO
+		ORDER BY
+		    A.ATTACH_NO DESC
+	</select>
+	
+	<select id="selectAllAppListCount" resultType="int">
+		SELECT
+			COUNT(A.ATTACH_NO)
+		FROM
+		    APPROVAL_ATTACH A
+		    INNER JOIN APPROVAL B ON A.APP_NO = B.APP_NO
+		    INNER JOIN VIEW_EMP C ON A.ATTACH_ATTACHER = C.EMP_NO
+	</select>
+  
+  </mapper>

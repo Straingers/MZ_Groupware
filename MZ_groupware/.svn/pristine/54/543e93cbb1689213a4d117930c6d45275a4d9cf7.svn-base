@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<!-- 인증 -->
+	<authentication-manager>
+		<authentication-provider ref="authenticator" />
+	</authentication-manager>
+
+	<beans:bean id="authenticator"
+				class="com.spring.security.CustomAuthenticationProvider" 
+				p:employeeService-ref="employeeService" />
+
+	<http pattern="/resources/**" security="none" />
+	
+	<http use-expressions="true">
+		
+		<access-denied-handler error-page="/security/accessDenied" />
+		
+<!-- 		<intercept-url pattern="/**/regist*" access="hasAnyRole('ROLE_ADMIN, ROLE_MANAGER')"/> -->
+<!-- 		<intercept-url pattern="/**/modify*" access="hasRole('ROLE_ADMIN')"/> -->
+<!-- 		<intercept-url pattern="/**/stop*" access="hasRole('ROLE_ADMIN')"/> -->
+		<intercept-url pattern="/comm/manage/deptList*" access="hasRole('ROLE_JANG')"/>
+		<intercept-url pattern="/comm/manage/deptStat*" access="hasRole('ROLE_JANG')"/>
+		
+		<intercept-url pattern="/index.do**" access="isAuthenticated()"/>
+		<intercept-url pattern="/approval/**" access="isAuthenticated()"/>
+		<intercept-url pattern="/task/**" access="isAuthenticated()"/>
+		<intercept-url pattern="/comm/**" access="isAuthenticated()"/>
+		<intercept-url pattern="/board/**" access="isAuthenticated()"/>
+		<intercept-url pattern="/office/**" access="isAuthenticated()"/>
+		<intercept-url pattern="/admin/**" access="isAuthenticated()"/>
+		<intercept-url pattern="/mypage/**" access="isAuthenticated()"/>
+		<intercept-url pattern="/cal/**" access="isAuthenticated()"/>
+		<intercept-url pattern="/schedule/**" access="isAuthenticated()"/>
+		<intercept-url pattern="/address/**" access="isAuthenticated()"/>
+		<intercept-url pattern="/cloud/**" access="isAuthenticated()"/>
+		
+		
+		<intercept-url pattern="/**" access="permitAll"/>
+		
+		<form-login login-page="/common/loginForm.do?error=1"
+					login-processing-url="/common/login.do"
+					username-parameter="empNo"
+					password-parameter="empPwd"
+					authentication-success-handler-ref="loginSuccessHandler"
+					authentication-failure-handler-ref="loginFailureHandler"/>
+		
+		<logout logout-url="/common/logout.do"
+				invalidate-session="false"
+				success-handler-ref="UserLogoutSuccessHandler"
+				delete-cookies="JSESSIONID" />
+				
+		<session-management invalid-session-url="/">
+			<concurrency-control expired-url="/common/loginExpired"
+								 max-sessions="3"
+								 session-registry-ref="sessionRegistry" />
+		</session-management>
+		
+	</http>
+	
+	<beans:bean id="UserLogoutSuccessHandler"
+				class="com.spring.security.UserLogoutSuccessHandler"/>
+				
+	<beans:bean id="loginSuccessHandler"
+				class="com.spring.security.LoginSuccessHandler"
+				p:defaultTargetUrl="/" />
+				
+	<beans:bean id="loginFailureHandler"
+				class="com.spring.security.LoginFailureHandler" />
+
+	<beans:bean id="sessionRegistry"
+				class="org.springframework.security.core.session.SessionRegistryImpl" />
+	
+</beans:beans>

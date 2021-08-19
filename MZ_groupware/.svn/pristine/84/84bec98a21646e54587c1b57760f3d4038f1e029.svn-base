@@ -1,0 +1,90 @@
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+  
+<configuration>
+	<settings>
+		<setting name="mapUnderscoreToCamelCase" value="true"/>
+	</settings>
+	
+	<typeAliases>
+		<typeAlias type="java.lang.String" alias="str" />
+		<typeAlias type="java.lang.Integer" alias="int" />
+		
+		<typeAlias type="com.spring.dto.EmployeeVO" alias="emp" />
+		<typeAlias type="com.spring.dto.DepartmentVO" alias="dept" />
+		<typeAlias type="com.spring.dto.MenuVO" alias="menu"/>
+		<typeAlias type="com.spring.approval.dto.ApprovalVO" alias="approval" />
+		<typeAlias type="com.spring.approval.dto.ApprovalDocVO" alias="approvalDoc" />
+		<typeAlias type="com.spring.approval.dto.ApprovalHistoryVO" alias="approvalHistory" />
+		<typeAlias type="com.spring.dto.ReplyVO" alias="reply" />
+		<typeAlias type="com.spring.approval.dto.ApprovalReplyVO" alias="approvalReply"/>
+		<typeAlias type="com.spring.mypage.dto.ApprovalLinePersonalVO" alias="approvalLine"/>
+		<typeAlias type="com.spring.mypage.dto.ApprovalLinePersonalDetailVO" alias="approvalLineDetail"/>
+		
+		<!-- 직위관리 -->
+		<typeAlias type="com.spring.position.dto.PositionVO" alias="position" />
+		
+		<!-- 커뮤니티 게시판 -->
+		<typeAlias type="com.spring.dto.CommunityBoardVO" alias="communityboard"/> 
+		<typeAlias type="com.spring.dto.AttachVO" alias="attach"/>
+		<typeAlias type="com.spring.approval.dto.ApprovalAttachVO" alias="approvalAttach"/>
+		<typeAlias type="com.spring.dto.CommunityReplyVO" alias="communityreply" />
+		
+		<!-- 인사변경 히스토리 -->
+		<typeAlias type="com.spring.member.history.dto.TransferHistoryVO" alias="transferHistory"/> 
+	
+		 <!-- Calendar -->
+		<typeAlias type="com.spring.dto.CalendarVO" alias="calendar" />
+		
+		<!-- NoticeBoard -->
+		<typeAlias type="com.spring.dto.NoticeBoardVO" alias="noticeboard" />
+		
+		<!-- Reservation -->
+		<typeAlias type="com.spring.dto.ReservationVO" alias="reservation" />
+
+		<!-- 관리자 - 근태관리 -->
+		<typeAlias type="com.spring.admin.commute.dto.HolidayVO" alias="holiday" />
+		<typeAlias type="com.spring.dto.VacationVO" alias="vacation" />
+		<typeAlias type="com.spring.admin.commute.dto.VacationTypeVO" alias="vacationType" />
+		
+		<!-- 관리자 - 게시판관리 -->
+		<typeAlias type="com.spring.admin.additional.dto.AdditionalTypeVO" alias="additional" />
+		<typeAlias type="com.spring.admin.additional.dto.AdditionalBoardVO" alias="additionalBoard"/>
+		<typeAlias type="com.spring.admin.additional.dto.AdditionalBoardReplyVO" alias="additionalReply"/>
+		
+		<!-- 업무관리 -->
+		<typeAlias type="com.spring.task.dto.TaskAttachVO" alias="taskAttach" />
+		<typeAlias type="com.spring.task.dto.TaskDocVO" alias="taskDoc" />
+		<typeAlias type="com.spring.task.dto.TaskHistoryVO" alias="taskHistory"/>
+		<typeAlias type="com.spring.task.dto.TaskReplyVO" alias="taskReply"/>
+		<typeAlias type="com.spring.task.dto.TaskReportVO" alias="taskReport" />
+		<typeAlias type="com.spring.mypage.dto.TaskReceiverLineVO" alias="taskReceiver"/>
+		<typeAlias type="com.spring.mypage.dto.TaskReceiverLineDetailVO" alias="taskReceiverDetail"/>
+		
+		<typeAlias type="com.spring.dto.IpManageVO" alias="ip"/> <!-- 출퇴근허용IP -->	
+		
+		<!-- 쪽지함 -->
+		<typeAlias type="com.spring.msg.dto.MessageVO" alias="msg"/>
+
+		<!-- 회사내규 -->
+		<typeAlias type="com.spring.office.dto.OfficeVO" alias="office"/>
+		
+		<typeAlias type="com.spring.notification.dto.NotificationVO" alias="notification"/>
+		<typeAlias type="com.spring.dto.AdminVO" alias="admin"/>
+		
+		<!-- 신입사원 교육자료 -->
+		<typeAlias type="com.spring.ot.dto.OtVO" alias="ot"/>
+
+		<!-- 자료실 -->
+		<typeAlias type="com.spring.pds.dto.PdsVO" alias="pds"/>
+
+		<!-- 주소록 -->
+		<typeAlias type="com.spring.address.dto.ContactFavoriteVO" alias="favorite"/>
+		
+		<!-- 클라우드 -->
+		<typeAlias type="com.spring.cloud.dto.FolderVO" alias="folder"/>
+		<typeAlias type="com.spring.cloud.dto.FileVO" alias="file"/>
+	</typeAliases>
+  
+</configuration>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AdditionalBoard-Mapper">
+	<select id="selectBoardListByBoardCode" resultType="additionalBoard">
+		SELECT A.ADD_NO
+		     , A.BOARD_CODE
+		     , A.EMP_NO
+		     , B.EMP_NAME empName
+		     , A.ADD_TITLE
+		     , A.ADD_CONTENT
+		     , A.ADD_REGDATE
+		     , A.ADD_VIEWCNT
+		     , A.ADD_UPDATEDATE
+		     , A.IS_DEL
+		     , C.MENU_NAME menuName
+		FROM   ADDITIONAL_BOARD A INNER JOIN EMPLOYEE B 
+			   ON (A.EMP_NO = B.EMP_NO) INNER JOIN MENU C ON(A.BOARD_CODE = C.MENU_CODE)
+		WHERE  BOARD_CODE = #{tempStr}
+		AND    A.ADD_NO IS NOT NULL
+		AND    A.IS_DEL = 'N'
+		<if test="searchType == 't'.toString()">
+			and a.add_title like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			and b.emp_name like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			and a.add_content like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			and a.add_title like '%'||#{keyword}||'%'
+			or a.add_content like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'cw'.toString()">
+			and b.emp_name like '%'||#{keyword}||'%'
+			or a.add_content like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tcw'.toString()">
+			and (
+			a.add_title like '%'||#{keyword}||'%'
+			or
+			b.emp_name like '%'||#{keyword}||'%'
+			or
+			a.add_content like '%'||#{keyword}||'%'
+			)
+		</if>
+		ORDER  BY A.ADD_REGDATE DESC
+	</select>
+
+	<select id="selectBoardListByBoardCodeCount" resultType="int">
+		SELECT COUNT(*)
+		FROM   ADDITIONAL_BOARD A INNER JOIN EMPLOYEE B 
+			   ON (A.EMP_NO = B.EMP_NO)
+		WHERE  BOARD_CODE = #{tempStr}
+		AND    ADD_NO IS NOT NULL
+		<if test="searchType == 't'.toString()">
+			and a.add_title like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			and b.emp_name like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'c'.toString()">
+			and a.add_content like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tc'.toString()">
+			and a.add_title like '%'||#{keyword}||'%'
+			or a.add_content like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'cw'.toString()">
+			and b.emp_name like '%'||#{keyword}||'%'
+			or a.add_content like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tcw'.toString()">
+			and (
+			a.add_title like '%'||#{keyword}||'%'
+			or
+			b.emp_name like '%'||#{keyword}||'%'
+			or
+			a.add_content like '%'||#{keyword}||'%'
+			)
+		</if>
+		AND    IS_DEL = 'N'
+	</select>
+
+	<select id="selectBoardByAddNo" resultType="additionalBoard">
+		SELECT ADD_NO
+		     , BOARD_CODE
+		     , EMP_NO
+		     , ADD_TITLE
+		     , ADD_CONTENT
+		     , ADD_REGDATE
+		     , ADD_VIEWCNT
+		     , ADD_UPDATEDATE
+		     , IS_DEL
+		FROM   ADDITIONAL_BOARD
+		WHERE  ADD_NO = #{addNo}
+	</select>
+
+	<update id="increaseViewCount">
+		UPDATE ADDITIONAL_BOARD
+		SET    ADD_VIEWCNT = ADD_VIEWCNT + 1
+		WHERE  ADD_NO = #{addNo}
+	</update>
+
+	<update id="insertBoard">
+		INSERT INTO ADDITIONAL_BOARD (
+		    ADD_NO
+		  , BOARD_CODE
+		  , EMP_NO
+		  , ADD_TITLE
+		  , ADD_CONTENT
+		  , ADD_REGDATE
+		  , ADD_VIEWCNT
+		  , ADD_UPDATEDATE
+		) VALUES (
+		    SEQ_ADDITIONALBOARD.NEXTVAL
+		  , #{boardCode}
+		  , #{empNo}
+		  , #{addTitle}
+		  , #{addContent}
+		  , SYSDATE
+		  , 0
+		  , SYSDATE
+		)	
+	</update>
+
+	<select id="getLastAddNo" resultType="int">
+		SELECT ADD_NO
+		FROM   ADDITIONAL_BOARD
+		WHERE  ROWNUM = 1
+		ORDER  BY ADD_NO DESC
+	</select>
+
+	<update id="updateBoard">
+		UPDATE ADDITIONAL_BOARD
+	    SET    ADD_TITLE = #{addTitle}
+		     , ADD_CONTENT = #{addContent}
+		     , ADD_UPDATEDATE = SYSDATE
+		WHERE  ADD_NO = #{addNo}
+	</update>
+	
+	<update id="deleteBoard">
+		UPDATE ADDITIONAL_BOARD
+		SET    IS_DEL = 'Y'
+		WHERE  ADD_NO = #{addNo}
+	</update>
+</mapper>

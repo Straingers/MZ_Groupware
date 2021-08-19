@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TaskDoc-Mapper">
+
+	<select id="selectTaskDocList" resultType="taskDoc">
+		SELECT 	TASK_DOC_ID, TASK_DOC_NAME, TASK_CONTENT, IS_USE, TASK_DOC_TYPE
+		FROM 	TASK_DOC
+		WHERE 	IS_DEL = 'N'
+		ORDER BY TASK_DOC_ID ASC
+	</select>
+	
+	<select id="selectUseTaskDocList" resultType="taskDoc">
+		SELECT *
+		FROM   TASK_DOC
+		WHERE  IS_DEL = 'N' AND IS_USE = 'Y' AND TASK_DOC_TYPE = #{taskDocType}
+		ORDER  BY TASK_DOC_NAME ASC
+	</select>
+
+	<select id="selectTaskDocTotalCount" resultType="int">
+		SELECT 	COUNT(TASK_DOC_ID)
+		FROM 	TASK_DOC
+		WHERE 	IS_DEL = 'N'
+	</select>
+
+	<select id="selectTaskDoc" resultType="taskDoc" parameterType="taskDoc">
+		SELECT 	TASK_DOC_ID, TASK_DOC_NAME, TASK_CONTENT, IS_USE, TASK_DOC_TYPE
+		FROM 	TASK_DOC
+		WHERE 	TASK_DOC_ID = #{taskDocId}
+	</select>
+
+	<insert id="insertTaskDoc" parameterType="taskDoc">
+		INSERT INTO TASK_DOC (TASK_DOC_ID, TASK_DOC_NAME, TASK_CONTENT, TASK_DOC_TYPE, IS_USE)
+		VALUES (#{taskDocId}, #{taskDocName}, #{taskContent},#{taskDocType},#{isUse})
+
+		<selectKey keyProperty="taskDocId" resultType="int" order="BEFORE">
+			SELECT SEQ_TASK_DOC.nextval FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<update id="updateTaskDoc">
+		UPDATE TASK_DOC
+		SET	   TASK_DOC_NAME = #{taskDocName}
+			   , TASK_DOC_TYPE = #{taskDocType}
+			   , TASK_CONTENT = #{taskContent}
+			   , IS_USE = #{isUse}
+		WHERE  TASK_DOC_ID = #{taskDocId}
+	</update>
+	
+	<update id="updateUse">
+		UPDATE TASK_DOC
+		SET    IS_USE = #{isUse}
+		WHERE  TASK_DOC_ID = #{taskDocId}
+	</update>
+	
+	<update id="deleteTaskDoc">
+		UPDATE TASK_DOC
+		SET    IS_DEL = 'Y'
+		WHERE  TASK_DOC_ID = #{taskDocId}
+	</update>
+	
+</mapper>

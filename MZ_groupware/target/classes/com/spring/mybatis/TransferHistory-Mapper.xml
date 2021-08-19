@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TransferHistory-Mapper">
+	<!-- 직원 검색 기능. -->
+	<sql id="searchTransferHistoryAll">
+		<if test="searchType == 'all'.toString()">
+			and 1=1
+		</if>
+		<if test="searchType == 'empName'.toString()">
+			and A.emp_name like '%' || #{keyword} || '%'
+		</if>
+		<if test="searchType == 'transStatus'.toString()">
+			and trans_status like '%' || #{keyword} || '%'
+		</if>
+	</sql>
+	
+	<!-- 인사변경 목록조회 + 검색, 페이징 기능 추가 -->
+	<select id="selectTransferHistorySearchCriteria" resultType="transferHistory">
+		SELECT
+			A.EMP_NO
+		 ,B.EMP_TEL
+		 ,B.EMP_PHOTO
+		 ,B.DEPT_CODE
+		 ,B.PS_CODE
+		 ,B.EMP_STATUS
+		 ,D.DEPT_NAME
+		 ,C.PS_NAME
+	   ,A.TRANS_NO
+	   ,A.EMP_NAME
+	   ,A.TRANS_DATE
+	   ,A.TRANS_STATUS
+	   ,A.TRANS_END_DATE
+	   ,A.TRANS_START_DATE
+	   ,TO_CHAR(A.TRANS_DATE, 'YYYY-MM-DD') AS STR_TRANS_DATE
+	   ,TO_CHAR(A.TRANS_END_DATE, 'YYYY-MM-DD') AS STR_TRANS_END_DATE
+	   ,TO_CHAR(A.TRANS_START_DATE, 'YYYY-MM-DD') AS STR_TRANS_START_DATE
+	   
+	   FROM transfer_history A INNER JOIN employee B ON A.emp_no = B.emp_no 
+	   												 INNER JOIN position C ON B.ps_code = C.ps_code
+	   												 INNER JOIN department D ON B.dept_code = D.dept_code
+		WHERE A.TRANS_NO IS NOT NULL
+		<include refid="searchTransferHistoryAll" />
+		ORDER BY A.TRANS_DATE DESC
+	</select>
+	
+	<!-- 인사변경 목록 내 인사변경 수 조회  -->
+	<select id="selectSearchTransferHistoryListCount" resultType="int">
+		SELECT
+		COUNT(*)
+		FROM TRANSFER_HISTORY
+		WHERE TRANS_NO IS NOT NULL
+		<if test="searchType == 'all'.toString()">
+			and 1=1
+		</if>
+		<if test="searchType == 'empName'.toString()">
+			and emp_name like '%' || #{keyword} || '%'
+		</if>
+		<if test="searchType == 'transStatus'.toString()">
+			and trans_status like '%' || #{keyword} || '%'
+		</if>
+		ORDER BY TRANS_DATE
+	</select>
+	
+	<!-- empNo 기준 변경 기록 조회 -->
+	<select id="selectTransferHistoryEmpNo" resultType="transferHistory">
+		SELECT
+		  trans_no
+		  ,emp_no
+		  ,trans_date
+		  ,trans_status
+		  ,trans_end_date
+		  ,trans_start_date
+		  ,emp_name
+		FROM
+		  transfer_history where emp_no = #{empNo}
+		ORDER BY trans_date desc
+	</select>
+	
+	<!-- 변경기록 등록 -->
+	<update id="insertTransferHistory">
+		<selectKey keyProperty="transNo" resultType="str" order="BEFORE"><!--  -->
+			SELECT SEQ_TRANSFER_HISTORY.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO transfer_history (
+		  trans_no
+		  ,emp_no
+		  ,trans_status
+		  ,trans_end_date
+		  ,trans_start_date
+		  ,emp_name
+		) VALUES (
+		  #{transNo}
+		  ,#{empNo}
+		  ,#{transStatus, jdbcType=VARCHAR}
+		  ,#{transEndDate, jdbcType=DATE}
+		  ,#{transStartDate, jdbcType=DATE}
+		  ,#{empName, jdbcType=VARCHAR}
+		)
+	</update>
+</mapper>

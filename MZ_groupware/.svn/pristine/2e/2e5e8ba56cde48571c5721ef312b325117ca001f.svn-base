@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Commute-Mappers">
+
+	<select id="selectCommuteList" resultType="commute">
+		SELECT AA.*
+			   , (SELECT   GROUP_CONCAT(IN_TIME)
+					FROM   COMMUTE
+					WHERE  1=1
+					<if test="tempStr != ''">
+					 	AND DEPT_NAME LIKE CONCAT('%', #{tempStr}, '%')
+					 </if>
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{time}
+					AND    emp_no = AA.emp_no) AS inTime
+				, (SELECT  GROUP_CONCAT(OUT_TIME)
+					FROM   COMMUTE
+					WHERE  1=1
+					<if test="tempStr != ''">
+					 	AND DEPT_NAME LIKE CONCAT('%', #{tempStr}, '%')
+					 </if>
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{time}
+					AND    emp_no = AA.emp_no) AS outTime
+				, (SELECT  GROUP_CONCAT(IN_TYPE)
+					FROM   COMMUTE
+					WHERE  1=1
+					<if test="tempStr != ''">
+					 	AND DEPT_NAME LIKE CONCAT('%', #{tempStr}, '%')
+					 </if>
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{time}
+					AND    emp_no = AA.emp_no) AS inType
+				, (SELECT  GROUP_CONCAT(OUT_TYPE)
+					FROM   COMMUTE
+					WHERE  1=1
+					<if test="tempStr != ''">
+					 	AND DEPT_NAME LIKE CONCAT('%', #{tempStr}, '%')
+					</if>
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{time}
+					AND    emp_no = AA.emp_no) AS outType
+				, (SELECT  GROUP_CONCAT(COMMUTE_NO)
+					FROM   COMMUTE
+					WHERE  1=1
+					<if test="tempStr != ''">
+					 	AND DEPT_NAME LIKE CONCAT('%', #{tempStr}, '%')
+					 </if>
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{time}
+					AND    emp_no = AA.emp_no) AS commuteNo
+		FROM    (SELECT  distinct emp_no
+			   		   , emp_name
+			   	  	   , dept_name
+			   		   , ps_name
+			   		   , ps_level
+				 FROM   commute
+				 WHERE  1=1
+					 <if test="keyword != ''">
+					 	AND EMP_NAME LIKE CONCAT('%', #{keyword}, '%')
+					 </if>
+					 <if test="tempStr != ''">
+					 	AND DEPT_NAME LIKE CONCAT('%', #{tempStr}, '%')
+					 </if>
+				 ) AA
+		ORDER BY aa.dept_name, aa.ps_level
+	</select>
+	
+	<select id="selectCommuteListCount" resultType="int">
+		SELECT COUNT(*)
+		FROM    (SELECT  distinct emp_no
+			   		   , emp_name
+			   	  	   , dept_name
+			   		   , ps_name
+				 FROM   commute
+				 WHERE  1=1
+					 <if test="keyword != ''">
+					 	AND EMP_NAME LIKE CONCAT('%', #{keyword}, '%')
+					 </if>
+					 <if test="tempStr != ''">
+					 	AND DEPT_NAME LIKE CONCAT('%', #{tempStr}, '%')
+					 </if>
+				 ) AA
+	</select>
+	
+	<select id="selectCommuteByCommNo" resultType="commute">
+		SELECT *
+		FROM   COMMUTE
+		WHERE  COMMUTE_NO = #{commNo}
+	</select>
+	
+	<select id="selectCommuteListByEmp" resultType="commute">
+		SELECT *
+		FROM   COMMUTE
+		WHERE  EMP_NAME = #{empName}
+		AND    EMP_NO = #{empNo}
+	</select>
+	
+	<select id="selectMyCommute" resultType="commute">
+		SELECT AA.*
+			   , (SELECT GROUP_CONCAT(IN_TIME)
+					FROM   COMMUTE
+					WHERE  1=1
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{inTime}
+					AND    emp_no = AA.emp_no) AS inTime
+				, (SELECT  GROUP_CONCAT(OUT_TIME)
+					FROM   COMMUTE
+					WHERE  1=1
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{inTime}
+					AND    emp_no = AA.emp_no) AS outTime
+				, (SELECT  GROUP_CONCAT(IN_TYPE)
+					FROM   COMMUTE
+					WHERE  1=1
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{inTime}
+					AND    emp_no = AA.emp_no) AS inType
+				, (SELECT GROUP_CONCAT(OUT_TYPE)
+					FROM   COMMUTE
+					WHERE  1=1
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{inTime}
+					AND    emp_no = AA.emp_no) AS outType
+		FROM    (SELECT  distinct emp_no
+			   		   , emp_name
+			   	  	   , dept_name
+			   		   , ps_name
+			   		   , ps_level
+				 FROM   commute
+				 ) AA
+		WHERE  AA.EMP_NO = #{empNo}
+	</select>
+	
+	<select id="selectThisWeekWorkingDay" resultType="commute">
+		SELECT working_hour
+			, ADDDATE( CURDATE(), - WEEKDAY(CURDATE()) + 0 ) monday
+			, ADDDATE( CURDATE(), - WEEKDAY(CURDATE()) + 4 ) friday
+		FROM
+			commute
+		WHERE emp_no = #{empNo}
+		AND (DATE_FORMAT(IN_TIME, '%Y%m%d') = ADDDATE( CURDATE(), - WEEKDAY(CURDATE()) + 0 )
+		OR DATE_FORMAT(IN_TIME, '%Y%m%d') = ADDDATE( CURDATE(), - WEEKDAY(CURDATE()) + 1 )
+		OR DATE_FORMAT(IN_TIME, '%Y%m%d') = ADDDATE( CURDATE(), - WEEKDAY(CURDATE()) + 2 )
+		OR DATE_FORMAT(IN_TIME, '%Y%m%d') = ADDDATE( CURDATE(), - WEEKDAY(CURDATE()) + 3 )
+		OR DATE_FORMAT(IN_TIME, '%Y%m%d') = ADDDATE( CURDATE(), - WEEKDAY(CURDATE()) + 4 )
+		OR DATE_FORMAT(IN_TIME, '%Y%m%d') = ADDDATE( CURDATE(), - WEEKDAY(CURDATE()) + 5 )
+		OR DATE_FORMAT(IN_TIME, '%Y%m%d') = ADDDATE( CURDATE(), - WEEKDAY(CURDATE()) + 6 ))
+	</select>
+	
+	<select id="selectCommuteListByDept" resultType="commute">
+		SELECT *
+		FROM   COMMUTE
+		WHERE  DEPT_NAME = #{deptName}
+	</select>
+
+	<select id="selectCommuteListByDeptNMonth" resultType="commute">
+		SELECT AA.*
+			   , (SELECT   GROUP_CONCAT(IN_TIME)
+					FROM   COMMUTE
+					WHERE  DEPT_NAME = #{deptName}
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{workingHour}
+					AND    emp_no = AA.emp_no) AS inTime
+				, (SELECT  GROUP_CONCAT(OUT_TIME)
+					FROM   COMMUTE
+					WHERE  DEPT_NAME = #{deptName}
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{workingHour}
+					AND    emp_no = AA.emp_no) AS outTime
+				, (SELECT  GROUP_CONCAT(IN_TYPE)
+					FROM   COMMUTE
+					WHERE  DEPT_NAME = #{deptName}
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{workingHour}
+					AND    emp_no = AA.emp_no) AS inType
+				, (SELECT  GROUP_CONCAT(OUT_TYPE)
+					FROM   COMMUTE
+					WHERE  DEPT_NAME = #{deptName}
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{workingHour}
+					AND    emp_no = AA.emp_no) AS outType
+				, (SELECT  GROUP_CONCAT(COMMUTE_NO)
+					FROM   COMMUTE
+					WHERE  DEPT_NAME = #{deptName}
+					AND    DATE_FORMAT(IN_TIME, '%Y%m') = #{workingHour}
+					AND    emp_no = AA.emp_no) AS commuteNo
+		FROM    (SELECT  distinct emp_no
+			   		   , emp_name
+			   	  	   , dept_name
+			   		   , ps_name
+			   		   , ps_level
+				 FROM   commute
+				 WHERE  dept_name = #{deptName}) AA
+		ORDER BY aa.dept_name, aa.ps_level
+	</select>
+	
+	<update id="updateCommuteInfo">
+		UPDATE commute
+		SET dept_name = #{deptName}
+			, ps_name = #{psName}
+			, ps_level = #{psLevel}
+		WHERE emp_no = #{empNo}
+	</update>
+	
+	<select id="selectTodayCommute" resultType="commute">
+		SELECT emp_no
+			, dept_name
+			, ps_name
+			, in_time
+			, out_time
+			, in_type
+			, out_type
+		FROM commute
+		WHERE emp_no = #{empNo}
+		AND DATE_FORMAT(IN_TIME, '%Y%m%d') = #{workingHour}; 
+	</select>
+	
+	<select id="selectEmpByTime" resultType="commute">
+		SELECT *
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d') 
+	</select>
+	
+	<update id="insertCommuteLog">
+		INSERT INTO COMMUTE (
+			COMMUTE_NO
+			, EMP_NO
+			, EMP_NAME
+			, DEPT_NAME
+			, PS_NAME
+			, IN_TIME
+			, IN_TYPE
+			, ps_level
+		) VALUES (
+			#{commuteNo}
+			, #{empNo}
+			, #{empName}
+			, #{deptName}
+			, #{psName}
+			, #{inTime}
+			, #{inType}
+			, #{psLevel}
+		)
+	</update>
+	
+	<update id="updateOutTime">
+		UPDATE COMMUTE
+		SET    OUT_TIME = #{outTime}
+			   , OUT_TYPE = #{outType}
+			   , WORKING_HOUR = #{workingHour}
+			   , OVERWORK_HOUR = #{overworkHour}
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</update>
+	
+	<update id="updateWorkingTime">
+		UPDATE COMMUTE
+		SET    WORKING_HOUR = #{workingHour}
+			   , OVERWORK_HOUR = #{overworkHour}
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</update>
+	
+	<update id="updateInType">
+		UPDATE COMMUTE
+		SET    IN_TYPE = #{inType}
+			 , OUT_TYPE = #{outType}
+		WHERE  COMMUTE_NO = #{commuteNo}
+	</update>
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- 근로시간계산 -->
+	<select id="one" resultType="str">
+		SELECT DATE_FORMAT(TIMEDIFF(DATE_FORMAT(OUT_TIME, '%H:%i'), '09:00'), '%H:%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</select>
+	
+	<select id="two" resultType="str">
+		SELECT DATE_FORMAT(ADDTIME(TIMEDIFF(DATE_FORMAT(OUT_TIME, '%H:%i'), '13:00'), "3:0:0"), '%H:%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</select>
+	
+	<select id="three" resultType="str">
+		SELECT DATE_FORMAT(ADDTIME(TIMEDIFF(DATE_FORMAT(OUT_TIME, '%H:%i'), '19:00'), "8:0:0"), '%H:%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</select>
+	
+	<select id="four" resultType="str">
+		SELECT DATE_FORMAT(TIMEDIFF(out_time, in_time), '%H:%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</select>
+	
+	<select id="five" resultType="str">
+		SELECT DATE_FORMAT(ADDTIME(DATE_FORMAT(TIMEDIFF('12:00', DATE_FORMAT(in_time, '%H:%i')), '%H:%i'),DATE_FORMAT(TIMEDIFF('18:00', DATE_FORMAT(out_time, '%H:%i')), '%H:%i:%s')), '%H:%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</select>
+	
+	<select id="six" resultType="str">
+		SELECT DATE_FORMAT(ADDTIME(ADDTIME(DATE_FORMAT(TIMEDIFF('12:00', DATE_FORMAT(in_time, '%H:%i')), '%H:%i'), '5:0:0'), DATE_FORMAT(TIMEDIFF(DATE_FORMAT(out_time, '%H:%i'), '19:00'), '%H:%i:%s')), '%H:%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</select>
+	
+	<select id="seven" resultType="str">
+		SELECT DATE_FORMAT(TIMEDIFF(out_time, in_time), '%H:%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</select>
+	
+	<select id="eight" resultType="str">
+		SELECT DATE_FORMAT(ADDTIME(TIMEDIFF('18:00', DATE_FORMAT(in_time, '%H:%i')), DATE_FORMAT(TIMEDIFF(DATE_FORMAT(out_time, '%H:%i'), '19:00'), '%H:%i:%s')), '%H:%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</select>
+	
+	<select id="nine" resultType="str">
+		SELECT DATE_FORMAT(TIMEDIFF('12:00', DATE_FORMAT(in_time, '%H:%i')), '%H:%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+		
+	</select>
+	
+	<select id="ten" resultType="str">
+		SELECT DATE_FORMAT(ADDTIME(DATE_FORMAT(TIMEDIFF('12:00', DATE_FORMAT(in_time, '%H:%i')), '%H:%i'), '5:0:0'), '%H%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</select>
+	
+	<select id="eleven" resultType="str">
+		SELECT DATE_FORMAT(TIMEDIFF(DATE_FORMAT(out_time, '%H:%i'), '13:00'), '%H:%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</select>
+	
+	<select id="twelve" resultType="str">
+		SELECT DATE_FORMAT(ADDTIME(TIMEDIFF(DATE_FORMAT(out_time, '%H:%i'), '19:00'), '5:0:0'), '%H:%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</select>
+	
+	<select id="thirteen" resultType="str">
+		SELECT DATE_FORMAT(TIMEDIFF('18:00', DATE_FORMAT(in_time, '%H:%i')), '%H:%i')
+		FROM   COMMUTE
+		WHERE  EMP_NO = #{empNo}
+		AND    DATE_FORMAT(IN_TIME, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+	</select>
+</mapper>
